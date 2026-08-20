@@ -13,7 +13,7 @@ HTUP Controller Bridge is a cross-platform application that captures gamepad inp
 - 📊 **Real-Time Diagnostics**: Packet loss, jitter, latency, connection metrics
 - 🎨 **Premium UI**: Modern, professional desktop and mobile interfaces
 - 🔗 **Easy Pairing**: QR code-based connection establishment
-- 🔋 **Bluetooth HID** (experimental): Support where technically feasible
+- 🔵 **Bluetooth HID** (experimental): Support where technically feasible
 
 ## Quick Start
 
@@ -32,14 +32,41 @@ flutter pub get
 flutter run -d android
 ```
 
+### Mobile (iOS)
+
+```bash
+cd flutter_client
+flutter pub get
+flutter run -d ios
+```
+
 ## Documentation
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [Protocol Specification](docs/PROTOCOL.md)
-- [Development Guide](docs/DEVELOPMENT.md)
+- [Architecture](docs/ARCHITECTURE.md) - System design and module responsibilities
+- [Protocol Specification](docs/PROTOCOL.md) - Binary protocol format
+- [Development Guide](docs/DEVELOPMENT.md) - Building and extending
+- [Testing Guide](docs/TESTING.md) - Test strategy
+- [Roadmap](docs/ROADMAP.md) - Development phases
+
+## Project Structure
+
+```
+src/
+  ├── ControllerBridge.Core/           Domain models and core logic
+  ├── ControllerBridge.Acquisition/    Gamepad input backends
+  ├── ControllerBridge.Transport/      Network transport and protocol
+  └── ControllerBridge.Desktop/        Avalonia desktop application
+
+flutter_client/                        Flutter mobile app
+tests/                                 Unit and integration tests
+docs/                                  Technical documentation
+```
 
 ## Status
 
-✅ Phase 1-5: Core, WiFi Transport, Mobile Client  
-🔄 Phase 6: UI Polish  
-⏳ Phase 7: Bluetooth HID (Experimental)  
+✅ Phase 1-6: Core, WiFi, Mobile, UI Polish  
+🔄 Phase 7: Bluetooth HID (Experimental)  
+
+## License
+
+(To be determined)
