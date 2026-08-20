@@ -1,3 +1,9 @@
+![.NET 8.0](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)
+![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Android%20%7C%20iOS-lightgrey)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+
+
 # HTUP Controller Bridge (Ulrich PadLink)
 
 **Transform any USB/DirectInput/Ucom gamepad into a wireless mobile controller.**
