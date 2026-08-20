@@ -1,0 +1,43 @@
+# Build results
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.iml
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependencies
+packages/
+.nuget/
+
+# Logs
+logs/
+*.log
+
+# Runtime
+*.dll
+*.exe
+*.so
+*.dylib
+
+# Flutter
+flutter_client/build/
+flutter_client/.dart_tool/
+flutter_client/.flutter-plugins
+flutter_client/.flutter-plugins-dependencies
+flutter_client/pubspec.lock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated files
+*.generated.cs
+*.g.dart
