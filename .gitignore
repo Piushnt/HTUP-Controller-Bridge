@@ -1,0 +1,53 @@
+# Build results
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.iml
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependencies
+packages/
+.nuget/
+
+# Logs
+logs/
+*.log
+
+# Runtime
+*.dll
+*.exe
+*.so
+*.dylib
+
+# Flutter
+flutter_client/build/
+flutter_client/.dart_tool/
+flutter_client/.flutter-plugins
+flutter_client/.flutter-plugins-dependencies
+flutter_client/pubspec.lock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated files
+*.generated.cs
+*.g.dart
+
+# Android
+flutter_client/android/.gradle/
+flutter_client/android/local.properties
+
+# iOS
+flutter_client/ios/Pods/
+flutter_client/ios/.symlinks/
+flutter_client/ios/Flutter/Flutter.framework
+flutter_client/ios/Flutter/Flutter.podspec
