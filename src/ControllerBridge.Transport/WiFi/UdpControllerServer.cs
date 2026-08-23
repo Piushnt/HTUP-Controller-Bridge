@@ -31,6 +31,12 @@ public class UdpControllerServer : IAsyncDisposable
 
     public event EventHandler<ClientConnection>? ClientConnected;
     public event EventHandler<string>? ClientDisconnected;
+    public event EventHandler<RumbleCommand>? RumbleReceived;
+
+    /// <summary>
+    /// Name of the currently active controller, included in discovery responses.
+    /// </summary>
+    public string ActiveControllerName { get; set; } = "No Controller";
 
     public NetworkMetrics Metrics { get; } = new();
     public int Port => _port;
@@ -145,37 +151,80 @@ public class UdpControllerServer : IAsyncDisposable
                     Metrics.TotalPacketsReceived++;
                     Metrics.LastPacketReceived = DateTime.UtcNow;
 
-                    string clientKey = result.RemoteEndPoint.ToString();
+                    // Determine incoming message type
+                    var msgType = result.Buffer.Length >= 2 ? (MessageType)result.Buffer[1] : MessageType.HandshakeRequest;
 
-                    if (!_clients.TryGetValue(clientKey, out var client))
+                    switch (msgType)
                     {
-                        client = new ClientConnection
-                        {
-                            Id = _nextClientId++,
-                            EndPoint = result.RemoteEndPoint,
-                            ConnectedAt = DateTime.UtcNow,
-                            LastSeen = DateTime.UtcNow
-                        };
+                        case MessageType.DiscoveryRequest:
+                            // Reply with our discovery payload
+                            try
+                            {
+                                var payload = new DiscoveryPayload
+                                {
+                                    HostName = QrCodeGenerator.GetLocalHostname(),
+                                    IpAddress = QrCodeGenerator.GetLocalIpAddress(),
+                                    Port = _port,
+                                    ControllerName = ActiveControllerName
+                                };
+                                byte[] responseBytes = payload.Serialize();
+                                await _udpClient.SendAsync(responseBytes, responseBytes.Length, result.RemoteEndPoint);
+                                _logger.LogDebug("Sent DiscoveryResponse to {EndPoint}", result.RemoteEndPoint);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogTrace(ex, "Failed to send DiscoveryResponse");
+                            }
+                            break;
 
-                        _clients[clientKey] = client;
-                        _logger.LogInformation("New Mobile Client registered: {EndPoint} (ID: {ClientId})", 
-                            result.RemoteEndPoint, client.Id);
-                        ClientConnected?.Invoke(this, client);
+                        case MessageType.Rumble:
+                            // Parse rumble command and raise event
+                            try
+                            {
+                                var rumble = RumbleCommand.Deserialize(result.Buffer);
+                                RumbleReceived?.Invoke(this, rumble);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogTrace(ex, "Failed to parse Rumble command");
+                            }
+                            break;
 
-                        // Send back an immediate handshake response
-                        var ackMsg = new ControllerMessage
-                        {
-                            Type = MessageType.HandshakeResponse,
-                            ClientId = client.Id,
-                            SequenceNumber = 0,
-                            TimestampMs = (ulong)Environment.TickCount64
-                        };
-                        byte[] ackBytes = ackMsg.Serialize();
-                        await _udpClient.SendAsync(ackBytes, ackBytes.Length, client.EndPoint);
-                    }
-                    else
-                    {
-                        client.LastSeen = DateTime.UtcNow;
+                        default:
+                            // Standard handshake / heartbeat / client registration
+                            string clientKey = result.RemoteEndPoint.ToString();
+
+                            if (!_clients.TryGetValue(clientKey, out var client))
+                            {
+                                client = new ClientConnection
+                                {
+                                    Id = _nextClientId++,
+                                    EndPoint = result.RemoteEndPoint,
+                                    ConnectedAt = DateTime.UtcNow,
+                                    LastSeen = DateTime.UtcNow
+                                };
+
+                                _clients[clientKey] = client;
+                                _logger.LogInformation("New Mobile Client registered: {EndPoint} (ID: {ClientId})", 
+                                    result.RemoteEndPoint, client.Id);
+                                ClientConnected?.Invoke(this, client);
+
+                                // Send back an immediate handshake response
+                                var ackMsg = new ControllerMessage
+                                {
+                                    Type = MessageType.HandshakeResponse,
+                                    ClientId = client.Id,
+                                    SequenceNumber = 0,
+                                    TimestampMs = (ulong)Environment.TickCount64
+                                };
+                                byte[] ackBytes = ackMsg.Serialize();
+                                await _udpClient.SendAsync(ackBytes, ackBytes.Length, client.EndPoint);
+                            }
+                            else
+                            {
+                                client.LastSeen = DateTime.UtcNow;
+                            }
+                            break;
                     }
                 }
                 catch (OperationCanceledException)

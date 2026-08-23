@@ -2,6 +2,7 @@ namespace ControllerBridge.Transport.WiFi;
 
 using QRCoder;
 using System.Net;
+using System.Net.Sockets;
 using System.Text.Json;
 
 /// <summary>

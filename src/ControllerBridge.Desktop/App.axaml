@@ -4,6 +4,5 @@
              RequestedThemeVariant="Light">
     <Application.Styles>
         <FluentTheme />
-        <StyleInclude Source="avares://Avalonia.Fonts.Inter/InterFont.axaml" />
     </Application.Styles>
 </Application>

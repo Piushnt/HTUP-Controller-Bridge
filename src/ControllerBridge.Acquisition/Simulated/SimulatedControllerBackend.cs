@@ -78,6 +78,11 @@ public class SimulatedControllerBackend : IControllerBackend
     {
         _logger.LogInformation("Shutting down simulated controller backend");
         
+        if (_simulatedController != null)
+        {
+            ControllerDisconnected?.Invoke(this, _simulatedController.ControllerId);
+        }
+
         if (_cts != null)
         {
             _cts.Cancel();
@@ -127,12 +132,12 @@ public class SimulatedControllerBackend : IControllerBackend
                     _simulatedController.TimestampMs = (ulong)(time * 1000);
 
                     // Simulate circular stick motion
-                    _simulatedController.LeftStickX.NormalizedValue = (float)Math.Sin(time) * 0.7f;
-                    _simulatedController.LeftStickY.NormalizedValue = (float)Math.Cos(time) * 0.7f;
+                    _simulatedController.LeftStickX = (float)Math.Sin(time) * 0.7f;
+                    _simulatedController.LeftStickY = (float)Math.Cos(time) * 0.7f;
 
                     // Simulate right stick slower rotation
-                    _simulatedController.RightStickX.NormalizedValue = (float)Math.Sin(time * 0.5f) * 0.5f;
-                    _simulatedController.RightStickY.NormalizedValue = (float)Math.Cos(time * 0.5f) * 0.5f;
+                    _simulatedController.RightStickX = (float)Math.Sin(time * 0.5f) * 0.5f;
+                    _simulatedController.RightStickY = (float)Math.Cos(time * 0.5f) * 0.5f;
 
                     // Simulate trigger oscillation
                     _simulatedController.LeftTrigger = (float)((Math.Sin(time * 2) + 1) / 2);

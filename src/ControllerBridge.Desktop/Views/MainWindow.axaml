@@ -313,7 +313,7 @@
                                 <Ellipse Canvas.Left="{Binding BubbleAnchorX, Converter={x:Null}}" Canvas.Top="{Binding BubbleAnchorY, Converter={x:Null}}" Margin="3,3,0,0" Width="8" Height="8" Fill="#FFFFFF"/>
 
                                 <!-- Dotted Connection Line -->
-                                <Line StartPoint="{Binding BubbleAnchorX, StringFormat='{0},158'}" EndPoint="{Binding BubbleLineEndX, StringFormat='{0},205'}" 
+                                <Line StartPoint="{Binding BubbleStartPoint}" EndPoint="{Binding BubbleEndPoint}" 
                                       Stroke="#06B6D4" StrokeThickness="2" StrokeDashArray="3,3"/>
 
                                 <!-- Annotation Bubble -->
@@ -434,7 +434,7 @@
                                         <TextBlock Text="ⓘ" FontSize="12" Foreground="#94A3B8"/>
                                     </StackPanel>
                                     <Border Grid.Column="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="8,2">
-                                        <TextBlock Text="{Binding Deadzone, StringFormat='{0:F2}'}" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
+                                        <TextBlock Text="{Binding Deadzone, StringFormat='{}{0:F2}'}" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
                                     </Border>
                                 </Grid>
                                 <Slider Minimum="0.0" Maximum="0.30" Value="{Binding Deadzone}" Foreground="#06B6D4"/>
@@ -449,7 +449,7 @@
                                         <TextBlock Text="ⓘ" FontSize="12" Foreground="#94A3B8"/>
                                     </StackPanel>
                                     <Border Grid.Column="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="8,2">
-                                        <TextBlock Text="{Binding Sensitivity, StringFormat='{0:F2}'}" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
+                                        <TextBlock Text="{Binding Sensitivity, StringFormat='{}{0:F2}'}" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
                                     </Border>
                                 </Grid>
                                 <Slider Minimum="0.5" Maximum="2.5" Value="{Binding Sensitivity}" Foreground="#8B5CF6"/>

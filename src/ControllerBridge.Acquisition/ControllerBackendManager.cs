@@ -140,4 +140,12 @@ public class ControllerBackendManager : IControllerBackend
     public List<ControllerInfo> GetConnectedControllers() => _activeBackend.GetConnectedControllers();
 
     public ControllerState? GetControllerState(string controllerId) => _activeBackend.GetControllerState(controllerId);
+
+    public bool SupportsVibration => _activeBackend.SupportsVibration;
+
+    /// <summary>
+    /// Routes vibration to the active backend. Fully fault-tolerant.
+    /// </summary>
+    public Task SetVibrationAsync(string controllerId, float leftMotor, float rightMotor, ushort durationMs = 200)
+        => _activeBackend.SetVibrationAsync(controllerId, leftMotor, rightMotor, durationMs);
 }

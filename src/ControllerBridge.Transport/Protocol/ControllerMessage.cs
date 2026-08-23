@@ -1,6 +1,8 @@
 namespace ControllerBridge.Transport.Protocol;
 
 using System;
+using System.Net;
+using System.Text;
 
 /// <summary>
 /// Protocol version information.
@@ -28,7 +30,10 @@ public enum MessageType : byte
     Disconnect = 0x06,
     ConfigurationRequest = 0x07,
     ConfigurationResponse = 0x08,
-    Diagnostic = 0x09
+    Diagnostic = 0x09,
+    DiscoveryRequest = 0x0A,
+    DiscoveryResponse = 0x0B,
+    Rumble = 0x0C
 }
 
 /// <summary>
@@ -39,7 +44,7 @@ public class ControllerMessage
     public const int PacketSize = 64;
 
     // Header (6 bytes)
-    public byte ProtocolVersion { get; set; } = ProtocolVersion.Major;
+    public byte ProtocolVersion { get; set; } = ControllerBridge.Transport.Protocol.ProtocolVersion.Major;
     public MessageType Type { get; set; } = MessageType.ControllerState;
     public uint SequenceNumber { get; set; }
 
@@ -247,5 +252,108 @@ public class ControllerMessage
         }
 
         return state;
+    }
+}
+
+/// <summary>
+/// Discovery broadcast payload: hostname, IP address, port, and active controller name.
+/// Used in DiscoveryResponse packets sent by the PC server.
+/// </summary>
+public class DiscoveryPayload
+{
+    public string HostName { get; set; } = "";
+    public string IpAddress { get; set; } = "";
+    public int Port { get; set; }
+    public string ControllerName { get; set; } = "";
+
+    /// <summary>
+    /// Serializes discovery info into a compact 64-byte packet (same fixed size as all protocol messages).
+    /// Layout: [0]=Version, [1]=MsgType(0x0B), [2..17]=HostName (16 bytes UTF8 truncated),
+    ///         [18..33]=IP (16 bytes UTF8), [34..35]=Port (uint16 LE), [36..59]=ControllerName (24 bytes UTF8), [63]=XOR checksum.
+    /// </summary>
+    public byte[] Serialize()
+    {
+        byte[] buffer = new byte[ControllerMessage.PacketSize];
+        buffer[0] = ProtocolVersion.Major;
+        buffer[1] = (byte)MessageType.DiscoveryResponse;
+
+        // HostName: bytes 2..17 (16 bytes max)
+        var hostBytes = Encoding.UTF8.GetBytes(HostName ?? "");
+        Array.Copy(hostBytes, 0, buffer, 2, Math.Min(hostBytes.Length, 16));
+
+        // IP: bytes 18..33 (16 bytes max)
+        var ipBytes = Encoding.UTF8.GetBytes(IpAddress ?? "");
+        Array.Copy(ipBytes, 0, buffer, 18, Math.Min(ipBytes.Length, 16));
+
+        // Port: bytes 34..35 (uint16 LE)
+        Array.Copy(BitConverter.GetBytes((ushort)Port), 0, buffer, 34, 2);
+
+        // ControllerName: bytes 36..59 (24 bytes max)
+        var nameBytes = Encoding.UTF8.GetBytes(ControllerName ?? "");
+        Array.Copy(nameBytes, 0, buffer, 36, Math.Min(nameBytes.Length, 24));
+
+        // XOR checksum at byte 63
+        byte checksum = 0;
+        for (int i = 0; i < ControllerMessage.PacketSize - 1; i++)
+            checksum ^= buffer[i];
+        buffer[ControllerMessage.PacketSize - 1] = checksum;
+
+        return buffer;
+    }
+
+    public static DiscoveryPayload Deserialize(byte[] buffer)
+    {
+        if (buffer == null || buffer.Length < 36)
+            throw new ArgumentException("Buffer too small for DiscoveryPayload", nameof(buffer));
+
+        return new DiscoveryPayload
+        {
+            HostName = Encoding.UTF8.GetString(buffer, 2, 16).TrimEnd('\0'),
+            IpAddress = Encoding.UTF8.GetString(buffer, 18, 16).TrimEnd('\0'),
+            Port = BitConverter.ToUInt16(buffer, 34),
+            ControllerName = buffer.Length >= 60 ? Encoding.UTF8.GetString(buffer, 36, 24).TrimEnd('\0') : ""
+        };
+    }
+}
+
+/// <summary>
+/// Rumble/vibration command sent from mobile client to PC server.
+/// Layout: [0]=Version, [1]=MsgType(0x0C), [2]=LeftMotor (0-255), [3]=RightMotor (0-255),
+///         [4..5]=DurationMs (uint16 LE), [63]=XOR checksum.
+/// </summary>
+public class RumbleCommand
+{
+    public byte LeftMotor { get; set; }
+    public byte RightMotor { get; set; }
+    public ushort DurationMs { get; set; } = 200;
+
+    public byte[] Serialize()
+    {
+        byte[] buffer = new byte[ControllerMessage.PacketSize];
+        buffer[0] = ProtocolVersion.Major;
+        buffer[1] = (byte)MessageType.Rumble;
+        buffer[2] = LeftMotor;
+        buffer[3] = RightMotor;
+        Array.Copy(BitConverter.GetBytes(DurationMs), 0, buffer, 4, 2);
+
+        byte checksum = 0;
+        for (int i = 0; i < ControllerMessage.PacketSize - 1; i++)
+            checksum ^= buffer[i];
+        buffer[ControllerMessage.PacketSize - 1] = checksum;
+
+        return buffer;
+    }
+
+    public static RumbleCommand Deserialize(byte[] buffer)
+    {
+        if (buffer == null || buffer.Length < 6)
+            throw new ArgumentException("Buffer too small for RumbleCommand", nameof(buffer));
+
+        return new RumbleCommand
+        {
+            LeftMotor = buffer[2],
+            RightMotor = buffer[3],
+            DurationMs = BitConverter.ToUInt16(buffer, 4)
+        };
     }
 }

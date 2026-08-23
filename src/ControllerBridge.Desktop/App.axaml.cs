@@ -46,7 +46,7 @@ public partial class App : Application
         var engine = Services.GetRequiredService<BridgeEngine>();
         await engine.StartAsync();
 
-        if (ApplicationLifetime is IClassicDesktopApplicationLifetime desktop)
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var vm = Services.GetRequiredService<MainWindowViewModel>();
             desktop.MainWindow = new MainWindow

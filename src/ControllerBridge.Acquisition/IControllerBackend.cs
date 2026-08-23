@@ -42,6 +42,23 @@ public interface IControllerBackend
     /// Event raised when controller state changes.
     /// </summary>
     event EventHandler<ControllerState>? ControllerStateChanged;
+
+    /// <summary>
+    /// Whether this backend supports vibration / force feedback.
+    /// Defaults to false for safe behavior on generic controllers.
+    /// </summary>
+    bool SupportsVibration => false;
+
+    /// <summary>
+    /// Sends a vibration/rumble command to the specified controller.
+    /// Must be fault-tolerant: if the hardware doesn't support vibration,
+    /// this must silently no-op without throwing or blocking.
+    /// </summary>
+    /// <param name="controllerId">Target controller ID.</param>
+    /// <param name="leftMotor">Left motor intensity [0.0 - 1.0].</param>
+    /// <param name="rightMotor">Right motor intensity [0.0 - 1.0].</param>
+    /// <param name="durationMs">Vibration duration in milliseconds.</param>
+    Task SetVibrationAsync(string controllerId, float leftMotor, float rightMotor, ushort durationMs = 200) => Task.CompletedTask;
 }
 
 /// <summary>

@@ -1,5 +1,6 @@
 namespace ControllerBridge.Desktop.ViewModels;
 
+using Avalonia;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -83,6 +84,8 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private double _bubbleLineEndY = 205;
     [ObservableProperty] private double _bubbleLeft = 470;
     [ObservableProperty] private double _bubbleTop = 185;
+    [ObservableProperty] private Point _bubbleStartPoint = new Point(412, 159);
+    [ObservableProperty] private Point _bubbleEndPoint = new Point(480, 205);
 
     // Full Step-by-Step Auto Remapping Wizard Mode
     [ObservableProperty] private bool _isWizardActive = false;
@@ -185,7 +188,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Dispatcher.UIThread.Post(() =>
             {
                 // Handle interactive listening & wizard step advance
-                if (IsListeningForBinding && _activeListeningButton.HasValue)
+                if (IsListeningForBinding && ActiveListeningButton.HasValue)
                 {
                     var now = DateTime.UtcNow;
                     if ((now - _lastButtonPressHandled).TotalMilliseconds > 300)
@@ -197,8 +200,8 @@ public partial class MainWindowViewModel : ViewModelBase
                             _lastButtonPressHandled = now;
 
                             // Apply mapping in active profile
-                            _engine.ActiveProfile.RemapButton(_activeListeningButton.Value, physicalPressed);
-                            LastRemapSuccessMessage = $"Mapped '{_activeListeningButton.Value}' to '{physicalPressed}'";
+                            _engine.ActiveProfile.RemapButton(ActiveListeningButton.Value, physicalPressed);
+                            LastRemapSuccessMessage = $"Mapped '{ActiveListeningButton.Value}' to '{physicalPressed}'";
 
                             if (IsWizardActive)
                             {
@@ -208,7 +211,7 @@ public partial class MainWindowViewModel : ViewModelBase
                             {
                                 // Single button mapping finished
                                 IsListeningForBinding = false;
-                                _activeListeningButton = null;
+                                ActiveListeningButton = null;
                             }
                         }
                     }
@@ -296,9 +299,9 @@ public partial class MainWindowViewModel : ViewModelBase
     public void StartFullMappingWizard()
     {
         IsWizardActive = true;
-        _wizardCurrentStep = 0;
-        _wizardTotalSteps = _wizardSequence.Length;
-        SetWizardButtonStep(_wizardCurrentStep);
+        WizardCurrentStep = 0;
+        WizardTotalSteps = _wizardSequence.Length;
+        SetWizardButtonStep(WizardCurrentStep);
     }
 
     private void SetWizardButtonStep(int stepIndex)
@@ -306,7 +309,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (stepIndex < _wizardSequence.Length)
         {
             var targetBtn = _wizardSequence[stepIndex];
-            WizardProgressText = $"Step {stepIndex + 1}/{_wizardTotalSteps}";
+            WizardProgressText = $"Step {stepIndex + 1}/{WizardTotalSteps}";
             SetupListeningForButton(targetBtn, isWizard: true);
         }
         else
@@ -314,30 +317,30 @@ public partial class MainWindowViewModel : ViewModelBase
             // All buttons configured!
             IsWizardActive = false;
             IsListeningForBinding = false;
-            _activeListeningButton = null;
+            ActiveListeningButton = null;
             LastRemapSuccessMessage = "✓ Full Controller Mapping Complete!";
         }
     }
 
     private void AdvanceWizard()
     {
-        _wizardCurrentStep++;
-        if (_wizardCurrentStep < _wizardSequence.Length)
+        WizardCurrentStep++;
+        if (WizardCurrentStep < _wizardSequence.Length)
         {
-            SetWizardButtonStep(_wizardCurrentStep);
+            SetWizardButtonStep(WizardCurrentStep);
         }
         else
         {
             IsWizardActive = false;
             IsListeningForBinding = false;
-            _activeListeningButton = null;
+            ActiveListeningButton = null;
             LastRemapSuccessMessage = "✓ Full Controller Mapping Complete!";
         }
     }
 
     private void SetupListeningForButton(ControllerButton targetButton, bool isWizard = false)
     {
-        _activeListeningButton = targetButton;
+        ActiveListeningButton = targetButton;
         ListeningTargetName = GetFriendlyButtonName(targetButton);
         ListeningInstruction = isWizard 
             ? $"[{WizardProgressText}] Press {ListeningTargetName} on your controller." 
@@ -440,6 +443,9 @@ public partial class MainWindowViewModel : ViewModelBase
                 BubbleLeft = 470; BubbleTop = 185;
                 break;
         }
+
+        BubbleStartPoint = new Point(BubbleAnchorX + 7, BubbleAnchorY + 7);
+        BubbleEndPoint = new Point(BubbleLineEndX, BubbleLineEndY);
     }
 
     [RelayCommand]
@@ -447,11 +453,12 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         IsListeningForBinding = false;
         IsWizardActive = false;
-        _activeListeningButton = null;
+        ActiveListeningButton = null;
+        ListeningInstruction = "";
     }
 
     [RelayCommand]
-    public void ToggleProfileDropdown()
+    public void OpenProfileDropdown()
     {
         IsProfileDropdownOpen = !IsProfileDropdownOpen;
     }
@@ -506,4 +513,12 @@ public partial class MainWindowViewModel : ViewModelBase
         await _engine.BackendManager.SetSimulationModeAsync(IsSimulationMode);
         UpdateControllerList();
     }
+}
+
+public partial class GameProfileItem : ObservableObject
+{
+    [ObservableProperty] private string _name = "";
+    [ObservableProperty] private string _displayName = "";
+    [ObservableProperty] private bool _isSelected;
+    public MappingProfile Profile { get; set; } = null!;
 }

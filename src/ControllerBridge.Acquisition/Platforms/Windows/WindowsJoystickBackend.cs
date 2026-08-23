@@ -383,4 +383,79 @@ public class WindowsJoystickBackend : IControllerBackend
         public JOYCAPS Caps { get; set; }
         public ControllerState LatestState { get; set; } = null!;
     }
+
+    #region Vibration / Force Feedback (Fault-Tolerant)
+
+    // XInput vibration P/Invoke (works only for XInput-compatible controllers)
+    [StructLayout(LayoutKind.Sequential)]
+    private struct XINPUT_VIBRATION
+    {
+        public ushort wLeftMotorSpeed;
+        public ushort wRightMotorSpeed;
+    }
+
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputSetState", SetLastError = false)]
+    private static extern uint XInputSetState(uint dwUserIndex, ref XINPUT_VIBRATION pVibration);
+
+    /// <summary>
+    /// Whether this backend supports vibration. Returns true optimistically;
+    /// actual support depends on the hardware and will be handled by fault-tolerant try-catch.
+    /// </summary>
+    public bool SupportsVibration => true;
+
+    /// <summary>
+    /// Sends a vibration command to the specified controller.
+    /// Fully isolated: if the hardware doesn't support vibration (typical for Ucom/generic DirectInput pads),
+    /// the error is silently caught without blocking the 125 Hz polling loop or the main thread.
+    /// </summary>
+    public Task SetVibrationAsync(string controllerId, float leftMotor, float rightMotor, ushort durationMs = 200)
+    {
+        // Find the device index for this controller
+        int deviceIndex = -1;
+        foreach (var kvp in _activeDevices)
+        {
+            if (kvp.Value.Info.Id == controllerId)
+            {
+                deviceIndex = kvp.Key;
+                break;
+            }
+        }
+
+        if (deviceIndex < 0)
+            return Task.CompletedTask;
+
+        // Fire-and-forget on ThreadPool to avoid blocking the acquisition loop
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var vibration = new XINPUT_VIBRATION
+                {
+                    wLeftMotorSpeed = (ushort)(Math.Clamp(leftMotor, 0f, 1f) * 65535),
+                    wRightMotorSpeed = (ushort)(Math.Clamp(rightMotor, 0f, 1f) * 65535)
+                };
+
+                XInputSetState((uint)deviceIndex, ref vibration);
+
+                // Auto-stop vibration after duration
+                if (durationMs > 0)
+                {
+                    await Task.Delay(durationMs);
+
+                    var stop = new XINPUT_VIBRATION { wLeftMotorSpeed = 0, wRightMotorSpeed = 0 };
+                    XInputSetState((uint)deviceIndex, ref stop);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silently swallow: Ucom/generic DirectInput pads don't support XInput vibration.
+                // This is expected and must never impact the acquisition thread.
+                _logger.LogTrace(ex, "Vibration not supported on device {Index} (expected for Ucom/DirectInput)", deviceIndex);
+            }
+        });
+
+        return Task.CompletedTask;
+    }
+
+    #endregion
 }
