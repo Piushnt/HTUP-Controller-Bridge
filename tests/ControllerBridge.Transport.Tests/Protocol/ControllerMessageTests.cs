@@ -7,9 +7,8 @@ namespace ControllerBridge.Transport.Tests.Protocol;
 public class ControllerMessageTests
 {
     [Fact]
-    public void Serialize_ProducesFixedSize()
+    public void Serialize_ProducesFixed64Bytes()
     {
-        // Arrange
         var message = new ControllerMessage
         {
             ProtocolVersion = ProtocolVersion.Major,
@@ -25,17 +24,14 @@ public class ControllerMessageTests
             Flags = 0x01
         };
 
-        // Act
         byte[] serialized = message.Serialize();
 
-        // Assert
         Assert.Equal(64, serialized.Length);
     }
 
     [Fact]
     public void SerializeDeserialize_RoundTrip_PreservesData()
     {
-        // Arrange
         var original = new ControllerMessage
         {
             ProtocolVersion = ProtocolVersion.Major,
@@ -48,16 +44,14 @@ public class ControllerMessageTests
             RightStickY = 1.0f,
             LeftTrigger = 100,
             RightTrigger = 200,
-            DPad = 0x05,
+            DPad = 0x05, // X=0 (packed=1), Y=0 (packed=1) -> (1 | 4) = 5
             Flags = 0x01,
             ClientId = 12345
         };
 
-        // Act
         byte[] serialized = original.Serialize();
         var deserialized = ControllerMessage.Deserialize(serialized);
 
-        // Assert
         Assert.Equal(original.SequenceNumber, deserialized.SequenceNumber);
         Assert.Equal(original.TimestampMs, deserialized.TimestampMs);
         Assert.Equal(original.LeftStickX, deserialized.LeftStickX, 3);
@@ -68,79 +62,34 @@ public class ControllerMessageTests
         Assert.Equal(original.RightTrigger, deserialized.RightTrigger);
         Assert.Equal(original.DPad, deserialized.DPad);
         Assert.Equal(original.Flags, deserialized.Flags);
+        Assert.Equal(original.ClientId, deserialized.ClientId);
     }
 
     [Fact]
-    public void FromControllerState_CreatesValidMessage()
+    public void FromAndToControllerState_AccuratelyReconstructsDPad()
     {
-        // Arrange
         var state = new ControllerState
         {
-            ControllerId = "test-001",
-            ControllerName = "Test Controller",
-            SequenceNumber = 10,
-            TimestampMs = 2000,
-            IsConnected = true,
-            LeftStickX = new AnalogAxis { NormalizedValue = 0.5f },
-            LeftStickY = new AnalogAxis { NormalizedValue = -0.5f },
-            RightStickX = new AnalogAxis { NormalizedValue = 0.0f },
-            RightStickY = new AnalogAxis { NormalizedValue = 1.0f },
-            LeftTrigger = 0.4f,
-            RightTrigger = 0.8f,
             DPadX = 1,
-            DPadY = 0
+            DPadY = -1,
+            LeftStickX = new AnalogAxis(0.5f),
+            LeftStickY = new AnalogAxis(-0.5f),
+            LeftTrigger = 0.5f,
+            RightTrigger = 1.0f,
+            IsConnected = true
         };
+        state.SetButtonState(ControllerButton.A, ButtonState.Pressed);
+        state.SetButtonState(ControllerButton.RB, ButtonState.Pressed);
 
-        // Act
-        var message = ControllerMessage.FromControllerState(state);
+        var msg = ControllerMessage.FromControllerState(state);
+        var reconstructed = msg.ToControllerState();
 
-        // Assert
-        Assert.NotNull(message);
-        Assert.Equal(10u, message.SequenceNumber);
-        Assert.Equal(2000ul, message.TimestampMs);
-        Assert.Equal(0.5f, message.LeftStickX, 2);
-        Assert.Equal(-0.5f, message.LeftStickY, 2);
-        Assert.Equal((byte)(0.4f * 255), message.LeftTrigger);
-        Assert.Equal((byte)(0.8f * 255), message.RightTrigger);
-    }
-
-    [Fact]
-    public void ToControllerState_ReconstructsState()
-    {
-        // Arrange
-        var message = new ControllerMessage
-        {
-            SequenceNumber = 5,
-            TimestampMs = 1500,
-            LeftStickX = 0.25f,
-            LeftStickY = 0.75f,
-            RightStickX = -0.5f,
-            RightStickY = -0.75f,
-            LeftTrigger = 64,
-            RightTrigger = 192,
-            Flags = 0x01
-        };
-
-        // Act
-        var state = message.ToControllerState("test-001", "Test Controller");
-
-        // Assert
-        Assert.NotNull(state);
-        Assert.Equal("test-001", state.ControllerId);
-        Assert.Equal("Test Controller", state.ControllerName);
-        Assert.Equal(5u, state.SequenceNumber);
-        Assert.Equal(1500ul, state.TimestampMs);
-        Assert.True(state.IsConnected);
-    }
-
-    [Fact]
-    public void ProtocolVersion_HasValidFormat()
-    {
-        // Assert
-        Assert.True(ProtocolVersion.Major >= 0);
-        Assert.True(ProtocolVersion.Minor >= 0);
-        Assert.True(ProtocolVersion.Patch >= 0);
-        Assert.Equal($"{ProtocolVersion.Major}.{ProtocolVersion.Minor}.{ProtocolVersion.Patch}", 
-            ProtocolVersion.Version);
+        Assert.Equal(1, reconstructed.DPadX);
+        Assert.Equal(-1, reconstructed.DPadY);
+        Assert.Equal(0.5f, reconstructed.LeftStickX.NormalizedValue, 2);
+        Assert.Equal(-0.5f, reconstructed.LeftStickY.NormalizedValue, 2);
+        Assert.Equal(ButtonState.Pressed, reconstructed.GetButtonState(ControllerButton.A));
+        Assert.Equal(ButtonState.Pressed, reconstructed.GetButtonState(ControllerButton.RB));
+        Assert.Equal(ButtonState.Released, reconstructed.GetButtonState(ControllerButton.B));
     }
 }

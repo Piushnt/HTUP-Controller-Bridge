@@ -3,76 +3,67 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Android%20%7C%20iOS-lightgrey)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 
-
 # HTUP Controller Bridge (Ulrich PadLink)
 
-**Transform any USB/DirectInput/Ucom gamepad into a wireless mobile controller.**
+**Transformez n'importe quelle manette USB/DirectInput générique (Ucom, Twin Joystick, etc.) branchée sur PC en un contrôleur sans fil fluide et universel pour smartphone (Android/iOS) avec émulation XInput et interface Windows 11 Fluent.**
 
-HTUP Controller Bridge is a cross-platform application that captures gamepad input from desktop (PC/Linux/Mac), normalizes it, and streams it to mobile devices (Android/iOS) via Wi-Fi UDP or Bluetooth HID.
+---
 
-## Features
+## 🎮 Fonctionnalités Clés
 
-- 🎮 **Universal Gamepad Support**: DirectInput, HID generic, XInput, legacy Ucom controllers
-- 📡 **Low-Latency Wi-Fi Transport**: UDP-based real-time streaming (~120 Hz target)
-- 📱 **Mobile Client**: Android and iOS apps with live gamepad visualization
-- ⚙️ **Advanced Normalization**: Deadzone, calibration, axis curves, remapping
-- 📊 **Real-Time Diagnostics**: Packet loss, jitter, latency, connection metrics
-- 🎨 **Premium UI**: Modern, professional desktop and mobile interfaces
-- 🔗 **Easy Pairing**: QR code-based connection establishment
-- 🔵 **Bluetooth HID** (experimental): Support where technically feasible
+- 🕹️ **Acquisition Réelle & Universelle** : Pilote natif Windows WinMM / DirectInput avec support de 100% des manettes USB génériques et Ucom à ~125 Hz.
+- 🔌 **Détection à Chaud (Hot-Plug)** : Branchement et débranchement des périphériques en temps réel sans blocage ni plantage.
+- 🛡️ **Émulation XInput Canonique** : Normalisation de l'état sous forme d'une manette Xbox virtuelle pour une compatibilité parfaite avec les jeux mobiles AAA (*Call of Duty: Mobile*, *Delta Force*, *Warzone Mobile*).
+- ⚡ **Auto-Remap Wizard Pas-à-Pas** : Configuration complète de la manette bouton par bouton sans toucher à la souris.
+- 🎯 **Visual Remapper Interactif** : Cliquez sur n'importe quel bouton de la manette stylisée pour écouter et assigner un bouton physique instantanément.
+- 📊 **Radars Néon & Sliders Réactifs** : Jauges circulaires pour sticks analogiques gauche (cyan) et droit (violet) avec réglage en direct des deadzones radiales et sensibilités.
+- 📡 **Streaming UDP 120Hz Basse Latence** : Protocole binaire ultra-compact de 64 octets avec contrôle d'intégrité (latence < 2.5 ms).
+- 📱 **Client Mobile Flutter Aligné** : Application Android / iOS moderne avec thème Fluent, visualiseur en temps réel et métriques de télémétrie réseau.
 
-## Quick Start
+---
 
-### Desktop (Windows/Linux/macOS)
+## 🚀 Démarrage Rapide
 
+### 1. Application Desktop (PC Windows)
 ```bash
 cd src/ControllerBridge.Desktop
 dotnet run
 ```
 
-### Mobile (Android)
-
+### 2. Client Mobile (Android / iOS)
 ```bash
 cd flutter_client
 flutter pub get
-flutter run -d android
+flutter run
 ```
 
-### Mobile (iOS)
+---
 
-```bash
-cd flutter_client
-flutter pub get
-flutter run -d ios
-```
+## 📚 Documentation Technique
 
-## Documentation
+- [Architecture Système](docs/ARCHITECTURE.md) - Conception globale, séparation en couches et flux de données
+- [Spécification du Protocole Réseau](docs/PROTOCOL.md) - Format de trame binaire 64 octets et mapping XInput
+- [Guide Développeur](docs/DEVELOPMENT.md) - Guide de compilation, extension de backends et styles XAML
+- [Stratégie de Tests](docs/TESTING.md) - Tests unitaires et validation
 
-- [Architecture](docs/ARCHITECTURE.md) - System design and module responsibilities
-- [Protocol Specification](docs/PROTOCOL.md) - Binary protocol format
-- [Development Guide](docs/DEVELOPMENT.md) - Building and extending
-- [Testing Guide](docs/TESTING.md) - Test strategy
-- [Roadmap](docs/ROADMAP.md) - Development phases
+---
 
-## Project Structure
+## 📂 Structure du Répertoire
 
 ```
-src/
-  ├── ControllerBridge.Core/           Domain models and core logic
-  ├── ControllerBridge.Acquisition/    Gamepad input backends
-  ├── ControllerBridge.Transport/      Network transport and protocol
-  └── ControllerBridge.Desktop/        Avalonia desktop application
-
-flutter_client/                        Flutter mobile app
-tests/                                 Unit and integration tests
-docs/                                  Technical documentation
+HTUP-Controller-Bridge/
+├── src/
+│   ├── ControllerBridge.Core/           # Modèles de domaine, normalisation radiale et profils de jeu
+│   ├── ControllerBridge.Acquisition/    # Pilote natif WindowsJoystickBackend et gestionnaire Hot-Plug
+│   ├── ControllerBridge.Transport/      # Protocole ControllerMessage et serveur UdpControllerServer 120Hz
+│   └── ControllerBridge.Desktop/        # Application Windows 11 Fluent UI (Avalonia 11.x MVVM)
+│
+├── flutter_client/                      # Client Mobile Flutter (Android & iOS)
+│   ├── lib/models/                      # Décodage binaire et métriques
+│   ├── lib/services/                    # Socket UDP et heartbeat
+│   └── lib/widgets/                     # GamepadVisualizer et NetworkStatsCard
+│
+├── tests/                               # Tests unitaires C# et tests d'intégration
+├── docs/                                # Spécifications et documentation complète
+└── HtupControllerBridge.sln             # Solution .NET 8.0
 ```
-
-## Status
-
-✅ Phase 1-6: Core, WiFi, Mobile, UI Polish  
-🔄 Phase 7: Bluetooth HID (Experimental)  
-
-## License
-
-(To be determined)

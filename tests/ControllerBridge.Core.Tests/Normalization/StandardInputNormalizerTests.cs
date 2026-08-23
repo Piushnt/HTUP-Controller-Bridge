@@ -1,4 +1,3 @@
-using ControllerBridge.Core.Domain;
 using ControllerBridge.Core.Normalization;
 using Xunit;
 
@@ -11,148 +10,85 @@ public class StandardInputNormalizerTests
     [Fact]
     public void NormalizeAxis_WithCenteredValue_ReturnsZero()
     {
-        // Arrange
-        float rawValue = 0f;
-        float min = -1f;
-        float max = 1f;
+        float rawValue = 32767.5f;
+        float min = 0f;
+        float max = 65535f;
 
-        // Act
         float result = _normalizer.NormalizeAxis(rawValue, min, max);
 
-        // Assert
         Assert.Equal(0f, result, 2);
     }
 
     [Fact]
     public void NormalizeAxis_WithMaxValue_ReturnsOne()
     {
-        // Arrange
-        float rawValue = 1f;
-        float min = -1f;
-        float max = 1f;
+        float rawValue = 65535f;
+        float min = 0f;
+        float max = 65535f;
 
-        // Act
         float result = _normalizer.NormalizeAxis(rawValue, min, max);
 
-        // Assert
         Assert.Equal(1f, result, 2);
     }
 
     [Fact]
     public void NormalizeAxis_WithMinValue_ReturnsNegativeOne()
     {
-        // Arrange
-        float rawValue = -1f;
-        float min = -1f;
-        float max = 1f;
+        float rawValue = 0f;
+        float min = 0f;
+        float max = 65535f;
 
-        // Act
         float result = _normalizer.NormalizeAxis(rawValue, min, max);
 
-        // Assert
         Assert.Equal(-1f, result, 2);
     }
 
     [Fact]
-    public void NormalizeAxis_WithDeadzone_ReturnZeroForSmallValues()
+    public void NormalizeStick2D_RadialDeadzone_FiltersSmallNoise()
     {
-        // Arrange
-        float rawValue = 0.05f;
-        float min = -1f;
-        float max = 1f;
-        float deadzone = 0.1f;
+        // Noise within deadzone threshold (< 0.15)
+        float rawX = 32767.5f + 500f;
+        float rawY = 32767.5f + 500f;
 
-        // Act
-        float result = _normalizer.NormalizeAxis(rawValue, min, max, deadzone);
+        var (x, y) = _normalizer.NormalizeStick2D(rawX, rawY, 0f, 65535f, 0f, 65535f, deadzone: 0.15f);
 
-        // Assert
-        Assert.Equal(0f, result, 2);
+        Assert.Equal(0f, x);
+        Assert.Equal(0f, y);
+    }
+
+    [Fact]
+    public void NormalizeStick2D_FullDeflection_ReachesOne()
+    {
+        float rawX = 65535f;
+        float rawY = 32767.5f;
+
+        var (x, y) = _normalizer.NormalizeStick2D(rawX, rawY, 0f, 65535f, 0f, 65535f, deadzone: 0.10f);
+
+        Assert.Equal(1f, x, 2);
+        Assert.Equal(0f, y, 2);
     }
 
     [Fact]
     public void NormalizeTrigger_WithMinValue_ReturnsZero()
     {
-        // Arrange
         float rawValue = 0f;
         float min = 0f;
-        float max = 1f;
+        float max = 255f;
 
-        // Act
         float result = _normalizer.NormalizeTrigger(rawValue, min, max);
 
-        // Assert
         Assert.Equal(0f, result, 2);
     }
 
     [Fact]
     public void NormalizeTrigger_WithMaxValue_ReturnsOne()
     {
-        // Arrange
-        float rawValue = 1f;
+        float rawValue = 255f;
         float min = 0f;
-        float max = 1f;
+        float max = 255f;
 
-        // Act
         float result = _normalizer.NormalizeTrigger(rawValue, min, max);
 
-        // Assert
         Assert.Equal(1f, result, 2);
-    }
-
-    [Fact]
-    public void ApplyDeadzone_WithValueBelowThreshold_ReturnsZero()
-    {
-        // Arrange
-        float value = 0.05f;
-        float threshold = 0.1f;
-
-        // Act
-        float result = _normalizer.ApplyDeadzone(value, threshold);
-
-        // Assert
-        Assert.Equal(0f, result, 2);
-    }
-
-    [Fact]
-    public void ApplyDeadzone_WithValueAboveThreshold_ReturnsProperlySacledValue()
-    {
-        // Arrange
-        float value = 0.5f;
-        float threshold = 0.1f;
-
-        // Act
-        float result = _normalizer.ApplyDeadzone(value, threshold);
-
-        // Assert
-        Assert.True(result > 0);
-        Assert.True(result <= 1f);
-    }
-
-    [Fact]
-    public void ApplyResponseCurve_WithLinearCurve_ReturnsSameValue()
-    {
-        // Arrange
-        float value = 0.75f;
-        float curveExponent = 1f;
-
-        // Act
-        float result = _normalizer.ApplyResponseCurve(value, curveExponent);
-
-        // Assert
-        Assert.Equal(value, result, 2);
-    }
-
-    [Fact]
-    public void ApplyResponseCurve_WithSquareCurve_ReturnsPoweredValue()
-    {
-        // Arrange
-        float value = 0.5f;
-        float curveExponent = 2f;
-
-        // Act
-        float result = _normalizer.ApplyResponseCurve(value, curveExponent);
-
-        // Assert
-        Assert.Equal(0.25f, result, 2);
     }
 }

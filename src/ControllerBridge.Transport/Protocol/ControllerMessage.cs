@@ -1,5 +1,7 @@
 namespace ControllerBridge.Transport.Protocol;
 
+using System;
+
 /// <summary>
 /// Protocol version information.
 /// </summary>
@@ -10,7 +12,6 @@ public static class ProtocolVersion
     public const byte Patch = 0;
 
     public static string Version => $"{Major}.{Minor}.{Patch}";
-
     public static byte[] GetVersionBytes() => new[] { Major, Minor, Patch };
 }
 
@@ -31,11 +32,12 @@ public enum MessageType : byte
 }
 
 /// <summary>
-/// Compact binary message format for controller state transmission.
-/// Total size: ~64 bytes (designed to fit in a single UDP packet easily).
+/// Compact 64-byte binary message format for high-speed UDP transmission.
 /// </summary>
 public class ControllerMessage
 {
+    public const int PacketSize = 64;
+
     // Header (6 bytes)
     public byte ProtocolVersion { get; set; } = ProtocolVersion.Major;
     public MessageType Type { get; set; } = MessageType.ControllerState;
@@ -44,34 +46,34 @@ public class ControllerMessage
     // Timestamp (8 bytes)
     public ulong TimestampMs { get; set; }
 
-    // Button state (3 bytes = 24 bits for 22 buttons)
+    // Button state (3 bytes = 24 bits)
     public byte[] ButtonBitfield { get; set; } = new byte[3];
 
-    // Analog axes (16 bytes = 4 x float16)
+    // Analog axes (16 bytes = 4 x float32 IEEE 754)
     public float LeftStickX { get; set; }
     public float LeftStickY { get; set; }
     public float RightStickX { get; set; }
     public float RightStickY { get; set; }
 
-    // Triggers (2 bytes = 2 x byte)
-    public byte LeftTrigger { get; set; }  // [0-255] maps to [0.0-1.0]
+    // Triggers (2 bytes: [0-255] maps to [0.0-1.0])
+    public byte LeftTrigger { get; set; }
     public byte RightTrigger { get; set; }
 
-    // D-Pad (1 byte packed)
-    public byte DPad { get; set; } // bits 0-1: X (-1,0,1), bits 2-3: Y (-1,0,1)
+    // D-Pad (1 byte: bits 0-1 for X (0=-1, 1=0, 2=1), bits 2-3 for Y (0=-1, 1=0, 2=1))
+    public byte DPad { get; set; }
 
-    // Connection state and flags (1 byte)
+    // Flags (1 byte: bit 0 = isConnected, bit 1 = isCalibrated)
     public byte Flags { get; set; }
 
-    // Client ID for multi-client support (4 bytes)
+    // Client ID (4 bytes)
     public uint ClientId { get; set; }
 
     /// <summary>
-    /// Serialize to bytes. Returns byte array ready for UDP transmission.
+    /// Serializes message to a fixed 64-byte array with trailing checksum.
     /// </summary>
     public byte[] Serialize()
     {
-        byte[] buffer = new byte[64];
+        byte[] buffer = new byte[PacketSize];
         int offset = 0;
 
         // Header
@@ -84,11 +86,11 @@ public class ControllerMessage
         Array.Copy(BitConverter.GetBytes(TimestampMs), 0, buffer, offset, 8);
         offset += 8;
 
-        // Buttons
+        // Buttons (3 bytes)
         Array.Copy(ButtonBitfield, 0, buffer, offset, 3);
         offset += 3;
 
-        // Analog axes (using float)
+        // Analog axes (4 x 4 bytes)
         Array.Copy(BitConverter.GetBytes(LeftStickX), 0, buffer, offset, 4);
         offset += 4;
         Array.Copy(BitConverter.GetBytes(LeftStickY), 0, buffer, offset, 4);
@@ -98,30 +100,38 @@ public class ControllerMessage
         Array.Copy(BitConverter.GetBytes(RightStickY), 0, buffer, offset, 4);
         offset += 4;
 
-        // Triggers
+        // Triggers (2 bytes)
         buffer[offset++] = LeftTrigger;
         buffer[offset++] = RightTrigger;
 
-        // D-Pad
+        // D-Pad (1 byte)
         buffer[offset++] = DPad;
 
-        // Flags
+        // Flags (1 byte)
         buffer[offset++] = Flags;
 
-        // Client ID
+        // Client ID (4 bytes)
         Array.Copy(BitConverter.GetBytes(ClientId), 0, buffer, offset, 4);
         offset += 4;
+
+        // Calculate simple XOR checksum on offset 63 for frame integrity
+        byte checksum = 0;
+        for (int i = 0; i < PacketSize - 1; i++)
+        {
+            checksum ^= buffer[i];
+        }
+        buffer[PacketSize - 1] = checksum;
 
         return buffer;
     }
 
     /// <summary>
-    /// Deserialize from bytes.
+    /// Deserializes message from incoming bytes.
     /// </summary>
     public static ControllerMessage Deserialize(byte[] buffer)
     {
-        if (buffer.Length < 42)
-            throw new InvalidOperationException("Buffer too small for ControllerMessage");
+        if (buffer == null || buffer.Length < 41)
+            throw new ArgumentException($"Buffer too small for ControllerMessage ({buffer?.Length ?? 0} bytes)", nameof(buffer));
 
         var msg = new ControllerMessage();
         int offset = 0;
@@ -152,13 +162,15 @@ public class ControllerMessage
         msg.Flags = buffer[offset++];
 
         if (buffer.Length >= offset + 4)
+        {
             msg.ClientId = BitConverter.ToUInt32(buffer, offset);
+        }
 
         return msg;
     }
 
     /// <summary>
-    /// Convert from canonical ControllerState.
+    /// Converts domain ControllerState to network ControllerMessage.
     /// </summary>
     public static ControllerMessage FromControllerState(Core.Domain.ControllerState state)
     {
@@ -170,15 +182,17 @@ public class ControllerMessage
             LeftStickY = state.LeftStickY.NormalizedValue,
             RightStickX = state.RightStickX.NormalizedValue,
             RightStickY = state.RightStickY.NormalizedValue,
-            LeftTrigger = (byte)(state.LeftTrigger * 255),
-            RightTrigger = (byte)(state.RightTrigger * 255),
+            LeftTrigger = (byte)Math.Clamp(state.LeftTrigger * 255f, 0f, 255f),
+            RightTrigger = (byte)Math.Clamp(state.RightTrigger * 255f, 0f, 255f),
             Flags = (byte)(state.IsConnected ? 0x01 : 0x00)
         };
 
-        // Pack D-Pad
-        msg.DPad = (byte)((state.DPadX & 0x3) | ((state.DPadY & 0x3) << 2));
+        // Pack D-Pad: DPadX and DPadY are in [-1, 0, 1], add 1 to map into [0, 1, 2] (fits in 2 bits)
+        int packedX = Math.Clamp(state.DPadX + 1, 0, 2);
+        int packedY = Math.Clamp(state.DPadY + 1, 0, 2);
+        msg.DPad = (byte)((packedX & 0x03) | ((packedY & 0x03) << 2));
 
-        // Pack buttons
+        // Pack buttons bitfield
         var buttons = state.GetPressedButtons();
         foreach (var button in buttons)
         {
@@ -195,9 +209,9 @@ public class ControllerMessage
     }
 
     /// <summary>
-    /// Convert to canonical ControllerState.
+    /// Converts network ControllerMessage to domain ControllerState.
     /// </summary>
-    public Core.Domain.ControllerState ToControllerState(string controllerId, string controllerName)
+    public Core.Domain.ControllerState ToControllerState(string controllerId = "", string controllerName = "")
     {
         var state = new Core.Domain.ControllerState
         {
@@ -205,19 +219,18 @@ public class ControllerMessage
             ControllerName = controllerName,
             SequenceNumber = SequenceNumber,
             TimestampMs = TimestampMs,
-            IsConnected = (Flags & 0x01) != 0
+            IsConnected = (Flags & 0x01) != 0,
+            LeftStickX = LeftStickX,
+            LeftStickY = LeftStickY,
+            RightStickX = RightStickX,
+            RightStickY = RightStickY,
+            LeftTrigger = LeftTrigger / 255.0f,
+            RightTrigger = RightTrigger / 255.0f
         };
 
-        state.LeftStickX.NormalizedValue = LeftStickX;
-        state.LeftStickY.NormalizedValue = LeftStickY;
-        state.RightStickX.NormalizedValue = RightStickX;
-        state.RightStickY.NormalizedValue = RightStickY;
-        state.LeftTrigger = LeftTrigger / 255f;
-        state.RightTrigger = RightTrigger / 255f;
-
-        // Unpack D-Pad
-        state.DPadX = (sbyte)(DPad & 0x3) - 1;
-        state.DPadY = (sbyte)((DPad >> 2) & 0x3) - 1;
+        // Unpack D-Pad: [0, 1, 2] - 1 maps back into [-1, 0, 1]
+        state.DPadX = (int)(DPad & 0x03) - 1;
+        state.DPadY = (int)((DPad >> 2) & 0x03) - 1;
 
         // Unpack buttons
         for (int bit = 0; bit < 24; bit++)
@@ -228,8 +241,7 @@ public class ControllerMessage
             {
                 if (bit < (int)Core.Domain.ControllerButton.MaxValue)
                 {
-                    var button = (Core.Domain.ControllerButton)bit;
-                    state.SetButtonState(button, Core.Domain.ButtonState.Pressed);
+                    state.SetButtonState((Core.Domain.ControllerButton)bit, Core.Domain.ButtonState.Pressed);
                 }
             }
         }
