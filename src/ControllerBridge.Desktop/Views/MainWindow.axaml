@@ -51,20 +51,52 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
         <!-- 1. TOP HEADER & NAVIGATION BAR -->
-        <Border Grid.Row="0" Background="#F8F9FB" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,12,24,0">
-            <StackPanel Spacing="10">
+        <Border Grid.Row="0" Background="#F8F9FB" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14,24,0">
+            <StackPanel Spacing="12">
                 <!-- Title Row -->
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <!-- Brand + Pill -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
-                        <Border Width="30" Height="30" CornerRadius="8" Background="LinearGradient(45deg, #3B82F6, #8B5CF6)">
-                            <TextBlock Text="🎮" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Width="32" Height="32" CornerRadius="8">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                    <GradientStop Offset="0.0" Color="#3B82F6"/>
+                                    <GradientStop Offset="1.0" Color="#8B5CF6"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <TextBlock Text="🎮" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="ControllerBridge" FontSize="18" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
                         <Border Background="#F1F5F9" CornerRadius="12" Padding="8,2" VerticalAlignment="Center" Margin="2,0,0,0">
                             <TextBlock Text="Desktop" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
                         </Border>
                     </StackPanel>
+
+                    <!-- Operating Mode Switcher Pill in Top Bar -->
+                    <Border Grid.Column="1" HorizontalAlignment="Center" Background="#F1F5F9" CornerRadius="20" Padding="3" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="2">
+                            <!-- Wi-Fi Bridge Button -->
+                            <Button Background="{Binding !IsXboxEmulationMode, Converter={x:Null}}"
+                                    Command="{Binding SetOperatingModeCommand}" CommandParameter="Bridge"
+                                    Cursor="Hand" Padding="14,6" CornerRadius="16" BorderThickness="0">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <TextBlock Text="📡" FontSize="12"/>
+                                    <TextBlock Text="Wi-Fi Bridge (Mobile)" FontSize="12" FontWeight="SemiBold" 
+                                               Foreground="{Binding !IsXboxEmulationMode, Converter={x:Null}}"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Xbox 360 Emulation Button -->
+                            <Button Command="{Binding SetOperatingModeCommand}" CommandParameter="Xbox"
+                                    Cursor="Hand" Padding="14,6" CornerRadius="16" BorderThickness="0">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <TextBlock Text="🎮" FontSize="12"/>
+                                    <TextBlock Text="Xbox 360 Direct (PC)" FontSize="12" FontWeight="SemiBold"
+                                               Foreground="{Binding IsXboxEmulationMode, Converter={x:Null}}"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
 
                     <!-- Windows Window Controls -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
@@ -78,39 +110,75 @@
                 <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4,0,0">
                     <!-- Tabs -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="24">
-                        <!-- Controller Tab (Active) -->
-                        <StackPanel Orientation="Vertical">
-                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                <TextBlock Text="🎮" FontSize="14" Foreground="#06B6D4"/>
-                                <TextBlock Text="Controller" FontSize="14" FontWeight="Bold" Foreground="#06B6D4"/>
+                        <!-- Controller Tab -->
+                        <Button Background="Transparent" BorderThickness="0" Padding="0" 
+                                Command="{Binding SelectTabCommand}" CommandParameter="Controller" Cursor="Hand">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <TextBlock Text="🎮" FontSize="14" Foreground="#06B6D4"/>
+                                    <TextBlock Text="Controller" FontSize="14" FontWeight="Bold" Foreground="#06B6D4"/>
+                                </StackPanel>
+                                <Rectangle Height="2.5" Fill="#06B6D4" RadiusX="1.25" RadiusY="1.25" Margin="0,8,0,0"
+                                           IsVisible="{Binding IsControllerTabSelected}"/>
                             </StackPanel>
-                            <Rectangle Height="2.5" Fill="#06B6D4" RadiusX="1.25" RadiusY="1.25" Margin="0,8,0,0"/>
-                        </StackPanel>
+                        </Button>
 
-                        <!-- Mapping Tab (triggers Auto-Remap Wizard) -->
-                        <Button Background="Transparent" BorderThickness="0" Padding="0" Command="{Binding StartFullMappingWizardCommand}" Cursor="Hand">
-                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,0,0,8">
-                                <TextBlock Text="☍" FontSize="15" Foreground="#475569"/>
-                                <TextBlock Text="Mapping" FontSize="14" FontWeight="SemiBold" Foreground="#475569"/>
+                        <!-- Mapping Tab -->
+                        <Button Background="Transparent" BorderThickness="0" Padding="0" 
+                                Command="{Binding StartFullMappingWizardCommand}" Cursor="Hand">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <TextBlock Text="⚡" FontSize="14" Foreground="#475569"/>
+                                    <TextBlock Text="Mapping" FontSize="14" FontWeight="SemiBold" Foreground="#475569"/>
+                                </StackPanel>
+                                <Rectangle Height="2.5" Fill="#0284C7" RadiusX="1.25" RadiusY="1.25" Margin="0,8,0,0"
+                                           IsVisible="{Binding IsMappingTabSelected}"/>
                             </StackPanel>
                         </Button>
 
                         <!-- Profiles Tab -->
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,0,0,8" Cursor="Hand">
-                            <TextBlock Text="👤" FontSize="14" Foreground="#475569"/>
-                            <TextBlock Text="Profiles" FontSize="14" FontWeight="SemiBold" Foreground="#475569"/>
-                        </StackPanel>
+                        <Button Background="Transparent" BorderThickness="0" Padding="0" 
+                                Command="{Binding OpenProfileDropdownCommand}" Cursor="Hand">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <TextBlock Text="👤" FontSize="14" Foreground="#475569"/>
+                                    <TextBlock Text="Profiles" FontSize="14" FontWeight="SemiBold" Foreground="#475569"/>
+                                </StackPanel>
+                                <Rectangle Height="2.5" Fill="#475569" RadiusX="1.25" RadiusY="1.25" Margin="0,8,0,0"
+                                           IsVisible="{Binding IsProfilesTabSelected}"/>
+                            </StackPanel>
+                        </Button>
 
                         <!-- Settings Tab -->
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,0,0,8" Cursor="Hand">
-                            <TextBlock Text="⚙" FontSize="15" Foreground="#475569"/>
-                            <TextBlock Text="Settings" FontSize="14" FontWeight="SemiBold" Foreground="#475569"/>
-                        </StackPanel>
+                        <Button Background="Transparent" BorderThickness="0" Padding="0" 
+                                Command="{Binding SelectTabCommand}" CommandParameter="Settings" Cursor="Hand">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <TextBlock Text="⚙" FontSize="15" Foreground="#475569"/>
+                                    <TextBlock Text="Settings" FontSize="14" FontWeight="SemiBold" Foreground="#475569"/>
+                                </StackPanel>
+                                <Rectangle Height="2.5" Fill="#475569" RadiusX="1.25" RadiusY="1.25" Margin="0,8,0,0"
+                                           IsVisible="{Binding IsSettingsTabSelected}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Guide & Setup Tab -->
+                        <Button Background="Transparent" BorderThickness="0" Padding="0" 
+                                Command="{Binding SelectTabCommand}" CommandParameter="Guide" Cursor="Hand">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <TextBlock Text="📖" FontSize="14" Foreground="#8B5CF6"/>
+                                    <TextBlock Text="Guide &amp; Config" FontSize="14" FontWeight="Bold" Foreground="#8B5CF6"/>
+                                </StackPanel>
+                                <Rectangle Height="2.5" Fill="#8B5CF6" RadiusX="1.25" RadiusY="1.25" Margin="0,8,0,0"
+                                           IsVisible="{Binding IsGuideTabSelected}"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
 
                     <!-- Controller Connected Status (Right) -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,0,0,8">
-                        <Ellipse Width="7" Height="7" Fill="#10B981"/>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,0,8">
+                        <Ellipse Width="8" Height="8" Fill="#10B981"/>
                         <TextBlock Text="{Binding ControllerStatus}" FontSize="13" FontWeight="SemiBold" Foreground="#1E293B"/>
                         <TextBlock Text="∨" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" Margin="2,0,0,0"/>
                     </StackPanel>
@@ -122,351 +190,599 @@
         <ScrollViewer Grid.Row="1" Padding="24,16">
             <StackPanel Spacing="16">
 
-                <!-- CENTRAL XBOX CONTROLLER & GAME PROFILE OVERLAY -->
-                <Border Height="340" Background="Transparent">
-                    <Grid>
-                        <!-- Top-Right: Game Profile Floating Selector -->
-                        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Width="260" Spacing="6" ZIndex="10">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Game Profile" FontSize="12" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
-                                <!-- Full Auto Wizard Button -->
-                                <Button Grid.Column="1" Content="⚡ Auto-Remap All" Command="{Binding StartFullMappingWizardCommand}"
-                                        Background="#E0F2FE" Foreground="#0284C7" FontSize="11" FontWeight="Bold" Padding="8,4" CornerRadius="6" Cursor="Hand"/>
-                            </Grid>
-
-                            <!-- Top Collapsed Box -->
-                            <Border Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
-                                <Border.Effect>
-                                    <DropShadowEffect Color="#000000" BlurRadius="6" Opacity="0.04"/>
-                                </Border.Effect>
-                                <Grid ColumnDefinitions="Auto,*,Auto">
-                                    <TextBlock Text="📄" FontSize="13" Foreground="#64748B" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedProfileName}" FontSize="13" FontWeight="SemiBold" Foreground="#1E293B" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="2" Text="∨" FontSize="12" Foreground="#64748B" VerticalAlignment="Center"/>
-                                </Grid>
-                            </Border>
-
-                            <!-- Dropdown Menu Options -->
-                            <Border Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="10" Padding="4">
-                                <Border.Effect>
-                                    <DropShadowEffect Color="#000000" BlurRadius="12" Opacity="0.08"/>
-                                </Border.Effect>
-                                <StackPanel Spacing="2">
-                                    <!-- Item 1: COD_Mobile.json -->
-                                    <Button Classes="ProfileDropdownBtn" Command="{Binding SelectProfileCommand}" CommandParameter="COD_Mobile.json">
-                                        <Grid ColumnDefinitions="Auto,*,Auto">
-                                            <TextBlock Text="📄" FontSize="13" Foreground="#3B82F6" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="COD_Mobile.json" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="2" Text="✓" FontSize="13" FontWeight="Bold" Foreground="#06B6D4" VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </Button>
-
-                                    <!-- Item 2: Delta_Force.json -->
-                                    <Button Classes="ProfileDropdownBtn" Command="{Binding SelectProfileCommand}" CommandParameter="Delta_Force.json">
-                                        <Grid ColumnDefinitions="Auto,*,Auto">
-                                            <TextBlock Text="📄" FontSize="13" Foreground="#64748B" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="Delta_Force.json" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="2" Text="✓" FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </Button>
-
-                                    <!-- Item 3: Default_Ucom.json -->
-                                    <Button Classes="ProfileDropdownBtn" Command="{Binding SelectProfileCommand}" CommandParameter="Default_Ucom.json">
-                                        <Grid ColumnDefinitions="Auto,*,Auto">
-                                            <TextBlock Text="📄" FontSize="13" Foreground="#64748B" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="Default_Ucom.json" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="2" Text="✓" FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </Button>
-                                </StackPanel>
-                            </Border>
+                <!-- LIVE INPUT MONITOR BAR & OPERATING MODE BANNER -->
+                <Border Classes="FluentCard" Padding="16,10" Background="{Binding IsXboxEmulationMode, Converter={x:Null}}">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <!-- Mode Info -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding IsXboxEmulationMode, Converter={x:Null}}" FontSize="16" VerticalAlignment="Center"/>
+                            <StackPanel>
+                                <TextBlock Text="{Binding OperatingModeName}" FontSize="13" FontWeight="Bold" Foreground="#1E293B"/>
+                                <TextBlock Text="Mode de transmission actif" FontSize="11" Foreground="#64748B"/>
+                            </StackPanel>
                         </StackPanel>
 
-                        <!-- Center Stylized Translucent Xbox Gamepad Vector Art -->
-                        <Canvas Width="540" Height="320" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <!-- Neon Glow Underlays (Cyan on Left, Violet/Pink on Right) -->
-                            <Ellipse Canvas.Left="20" Canvas.Top="40" Width="240" Height="220" Fill="#06B6D4" Opacity="0.25">
-                                <Ellipse.Effect>
-                                    <BlurEffect Radius="35"/>
-                                </Ellipse.Effect>
-                            </Ellipse>
-                            <Ellipse Canvas.Right="20" Canvas.Top="40" Width="240" Height="220" Fill="#D946EF" Opacity="0.25">
-                                <Ellipse.Effect>
-                                    <BlurEffect Radius="35"/>
-                                </Ellipse.Effect>
-                            </Ellipse>
-
-                            <!-- LB & RT Neon Labels / Buttons -->
-                            <Button Canvas.Left="80" Canvas.Top="4" Background="Transparent" BorderThickness="0" Padding="0"
-                                    Command="{Binding StartListeningForButtonCommand}" CommandParameter="LB">
-                                <TextBlock Text="LB" FontSize="13" FontWeight="Bold" Foreground="#06B6D4"/>
-                            </Button>
-
-                            <Button Canvas.Right="80" Canvas.Top="4" Background="Transparent" BorderThickness="0" Padding="0"
-                                    Command="{Binding StartListeningForButtonCommand}" CommandParameter="RT_Button">
-                                <TextBlock Text="RT" FontSize="13" FontWeight="Bold" Foreground="#D946EF"/>
-                            </Button>
-
-                            <!-- Gamepad Shell Base Geometry -->
-                            <Path Data="M 120,60 C 170,25 370,25 420,60 C 495,115 480,240 440,270 C 400,300 360,250 340,210 C 300,195 240,195 200,210 C 180,250 140,300 100,270 C 60,240 45,115 120,60 Z"
-                                  Fill="#FFFFFF" Stroke="#E2E8F0" StrokeThickness="2" Opacity="0.94">
-                                <Path.Effect>
-                                    <DropShadowEffect Color="#000000" BlurRadius="25" Opacity="0.10"/>
-                                </Path.Effect>
-                            </Path>
-
-                            <!-- Inner Shell Gradient Layer -->
-                            <Path Data="M 130,70 C 175,38 365,38 410,70 C 475,120 460,230 430,255 C 395,280 360,235 340,205 C 300,190 240,190 200,205 C 180,235 145,280 110,255 C 80,230 65,120 130,70 Z"
-                                  Fill="LinearGradient(0% 0% -> 100% 100%, #E0F2FE 0%, #FFFFFF 50%, #F5D0FE 100%)" Opacity="0.6"/>
-
-                            <!-- Left Analog Stick (Clickable for LS) -->
-                            <Button Canvas.Left="115" Canvas.Top="85" Classes="InteractivePadBtn" Width="52" Height="52" CornerRadius="26"
-                                    Background="#E0F2FE" BorderBrush="#06B6D4" BorderThickness="2"
-                                    Command="{Binding StartListeningForButtonCommand}" CommandParameter="LS">
-                                <Grid>
-                                    <Ellipse Width="32" Height="32" Fill="#38BDF8" Opacity="0.8"/>
-                                    <Ellipse Width="10" Height="10" Fill="#FFFFFF" Opacity="0.7"/>
-                                </Grid>
-                            </Button>
-
-                            <!-- D-Pad (Clickable for individual D-Pad directions) -->
-                            <Canvas Canvas.Left="160" Canvas.Top="145" Width="52" Height="52">
-                                <Path Data="M 18,0 L 34,0 L 34,18 L 52,18 L 52,34 L 34,34 L 34,52 L 18,52 L 18,34 L 0,34 L 0,18 L 18,18 Z"
-                                      Fill="#E0F2FE" Stroke="#38BDF8" StrokeThickness="1.5"/>
-                                <!-- DPad Up -->
-                                <Button Canvas.Left="16" Canvas.Top="0" Width="20" Height="18" Background="Transparent" BorderThickness="0"
-                                        Command="{Binding StartListeningForButtonCommand}" CommandParameter="DPadUp"/>
-                                <!-- DPad Down -->
-                                <Button Canvas.Left="16" Canvas.Bottom="0" Width="20" Height="18" Background="Transparent" BorderThickness="0"
-                                        Command="{Binding StartListeningForButtonCommand}" CommandParameter="DPadDown"/>
-                                <!-- DPad Left -->
-                                <Button Canvas.Left="0" Canvas.Top="16" Width="18" Height="20" Background="Transparent" BorderThickness="0"
-                                        Command="{Binding StartListeningForButtonCommand}" CommandParameter="DPadLeft"/>
-                                <!-- DPad Right -->
-                                <Button Canvas.Right="0" Canvas.Top="16" Width="18" Height="20" Background="Transparent" BorderThickness="0"
-                                        Command="{Binding StartListeningForButtonCommand}" CommandParameter="DPadRight"/>
-                            </Canvas>
-
-                            <!-- Center Xbox Home Glow Button -->
-                            <Border Canvas.Left="250" Canvas.Top="60" Width="40" Height="40" CornerRadius="20"
-                                    Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="2">
-                                <Grid>
-                                    <Ellipse Width="30" Height="30" Fill="#F8FAFC"/>
-                                    <TextBlock Text="✕" FontSize="18" FontWeight="Bold" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Grid>
+                        <!-- Real-time Input Tester Chip (Center) -->
+                        <Border Grid.Column="1" HorizontalAlignment="Center" Background="#F1F5F9" CornerRadius="12" Padding="14,6">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <Ellipse Width="8" Height="8" Fill="{Binding HasActiveInputs, Converter={x:Null}}" Margin="0,1,0,0"/>
+                                <TextBlock Text="🎮 Moniteur d'Entrées :" FontSize="12" FontWeight="Bold" Foreground="#475569"/>
+                                <TextBlock Text="{Binding ActivePressedButtonsSummary}" FontSize="12" FontWeight="SemiBold" Foreground="#0284C7"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Driver Status & Mode Switch -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Border Background="#F1F5F9" CornerRadius="10" Padding="10,4">
+                                <TextBlock Text="{Binding VirtualControllerStatus}" FontSize="11" FontWeight="SemiBold" Foreground="#334155"/>
                             </Border>
-
-                            <!-- Center Navigation Buttons (View / Back, Share, Menu / Start) -->
-                            <Button Canvas.Left="220" Canvas.Top="105" Width="18" Height="14" CornerRadius="3" Background="#CBD5E1" BorderThickness="0"
-                                    Command="{Binding StartListeningForButtonCommand}" CommandParameter="Back"/>
-                            <Ellipse Canvas.Left="265" Canvas.Top="115" Width="10" Height="10" Fill="#CBD5E1"/>
-                            <Button Canvas.Left="306" Canvas.Top="105" Width="18" Height="14" CornerRadius="3" Background="#CBD5E1" BorderThickness="0"
-                                    Command="{Binding StartListeningForButtonCommand}" CommandParameter="Start"/>
-
-                            <!-- Right Analog Stick (Clickable for RS) -->
-                            <Button Canvas.Left="245" Canvas.Top="145" Classes="InteractivePadBtn" Width="50" Height="50" CornerRadius="25"
-                                    Background="#F1F5F9" BorderBrush="#A855F7" BorderThickness="2"
-                                    Command="{Binding StartListeningForButtonCommand}" CommandParameter="RS">
-                                <Grid>
-                                    <Ellipse Width="30" Height="30" Fill="#CBD5E1"/>
-                                    <Ellipse Width="18" Height="18" Stroke="#94A3B8" StrokeThickness="1.5"/>
-                                </Grid>
-                            </Button>
-
-                            <!-- Face Buttons: Y, X, B, A (Clickable for direct mapping) -->
-                            <!-- Y (Yellow / Violet Top) -->
-                            <Button Canvas.Left="365" Canvas.Top="72" Classes="InteractivePadBtn" Width="26" Height="26" CornerRadius="13" 
-                                    Background="#F3E8FF" BorderBrush="#A855F7" BorderThickness="1.5"
-                                    Command="{Binding StartListeningForButtonCommand}" CommandParameter="Y">
-                                <TextBlock Text="Y" FontSize="12" FontWeight="Bold" Foreground="#7C3AED"/>
-                            </Button>
-
-                            <!-- X (Blue / Left) -->
-                            <Button Canvas.Left="335" Canvas.Top="100" Classes="InteractivePadBtn" Width="26" Height="26" CornerRadius="13" 
-                                    Background="#E0E7FF" BorderBrush="#6366F1" BorderThickness="1.5"
-                                    Command="{Binding StartListeningForButtonCommand}" CommandParameter="X">
-                                <TextBlock Text="X" FontSize="12" FontWeight="Bold" Foreground="#4338CA"/>
-                            </Button>
-
-                            <!-- B (Red / Right) -->
-                            <Button Canvas.Left="395" Canvas.Top="100" Classes="InteractivePadBtn" Width="26" Height="26" CornerRadius="13" 
-                                    Background="#FAE8FF" BorderBrush="#D946EF" BorderThickness="1.5"
-                                    Command="{Binding StartListeningForButtonCommand}" CommandParameter="B">
-                                <TextBlock Text="B" FontSize="12" FontWeight="Bold" Foreground="#A21CAF"/>
-                            </Button>
-
-                            <!-- A (Green / Cyan Bottom) -->
-                            <Button Canvas.Left="365" Canvas.Top="128" Classes="InteractivePadBtn" Width="26" Height="26" CornerRadius="13" 
-                                    Background="#E0F2FE" BorderBrush="#06B6D4" BorderThickness="1.5"
-                                    Command="{Binding StartListeningForButtonCommand}" CommandParameter="A">
-                                <TextBlock Text="A" FontSize="12" FontWeight="Bold" Foreground="#0284C7"/>
-                            </Button>
-
-                            <!-- FLOATING "LISTENING..." ANNOTATION & LINE (Only visible when user initiates mapping) -->
-                            <Canvas IsVisible="{Binding IsListeningForBinding}">
-                                <!-- Glowing Cyan Anchor Point on target button -->
-                                <Ellipse Canvas.Left="{Binding BubbleAnchorX}" Canvas.Top="{Binding BubbleAnchorY}" Width="14" Height="14" Fill="#06B6D4">
-                                    <Ellipse.Effect>
-                                        <DropShadowEffect Color="#06B6D4" BlurRadius="12" Opacity="0.9"/>
-                                    </Ellipse.Effect>
-                                </Ellipse>
-                                <Ellipse Canvas.Left="{Binding BubbleAnchorX, Converter={x:Null}}" Canvas.Top="{Binding BubbleAnchorY, Converter={x:Null}}" Margin="3,3,0,0" Width="8" Height="8" Fill="#FFFFFF"/>
-
-                                <!-- Dotted Connection Line -->
-                                <Line StartPoint="{Binding BubbleStartPoint}" EndPoint="{Binding BubbleEndPoint}" 
-                                      Stroke="#06B6D4" StrokeThickness="2" StrokeDashArray="3,3"/>
-
-                                <!-- Annotation Bubble -->
-                                <Border Canvas.Left="{Binding BubbleLeft}" Canvas.Top="{Binding BubbleTop}" Width="195" 
-                                        Background="#FFFFFF" BorderBrush="#BAE6FD" BorderThickness="1.5" CornerRadius="16" Padding="14,10">
-                                    <Border.Effect>
-                                        <DropShadowEffect Color="#06B6D4" BlurRadius="16" Opacity="0.22"/>
-                                    </Border.Effect>
-                                    <StackPanel Spacing="4">
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                                <Ellipse Width="10" Height="10" Stroke="#06B6D4" StrokeThickness="2.5" Fill="Transparent"/>
-                                                <TextBlock Text="Listening..." FontSize="13" FontWeight="Bold" Foreground="#0891B2"/>
-                                            </StackPanel>
-                                            <Button Grid.Column="1" Content="✕" Command="{Binding CancelListeningCommand}" 
-                                                    Background="Transparent" BorderThickness="0" Padding="4,0" Foreground="#94A3B8" FontSize="11" Cursor="Hand"/>
-                                        </Grid>
-                                        <TextBlock Text="{Binding ListeningInstruction}" FontSize="11" Foreground="#64748B"/>
-                                    </StackPanel>
-                                </Border>
-                            </Canvas>
-                        </Canvas>
+                            <Button Content="Basculer de Mode ⟳" Command="{Binding ToggleOperatingModeCommand}"
+                                    Background="#E0F2FE" Foreground="#0284C7" FontSize="11" FontWeight="Bold" Padding="10,4" CornerRadius="8" Cursor="Hand"/>
+                        </StackPanel>
                     </Grid>
                 </Border>
 
-                <!-- 3. LOWER 3 MODULE CARDS (LEFT RADAR, RIGHT RADAR, SETTINGS) -->
-                <Grid ColumnDefinitions="*,*,1.15*" Margin="0,6,0,0">
+                <!-- TAB 1: CONTROLLER VIEW -->
+                <StackPanel Spacing="16" IsVisible="{Binding IsControllerTabSelected}">
+                    <!-- CENTRAL XBOX CONTROLLER & GAME PROFILE OVERLAY -->
+                    <Border Height="360" Background="Transparent">
+                        <Grid>
+                            <!-- Top-Right: Game Profile Floating Selector -->
+                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Width="260" Spacing="6" ZIndex="20">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Game Profile" FontSize="12" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1" Content="⚡ Auto-Remap All" Command="{Binding StartFullMappingWizardCommand}"
+                                            Background="#E0F2FE" Foreground="#0284C7" FontSize="11" FontWeight="Bold" Padding="8,4" CornerRadius="6" Cursor="Hand"/>
+                                </Grid>
 
-                    <!-- CARD 1: LEFT ANALOG STICK RADAR -->
-                    <Border Grid.Column="0" Classes="FluentCard" Padding="20" Margin="0,0,10,0">
-                        <StackPanel Spacing="14">
-                            <!-- Card Header -->
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Ellipse Width="9" Height="9" Fill="#06B6D4"/>
-                                <TextBlock Text="Left Analog Stick" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
+                                <!-- Top Collapsed Box -->
+                                <Border Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,8">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#000000" BlurRadius="6" Opacity="0.04"/>
+                                    </Border.Effect>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding SelectedProfileName}" FontSize="13" FontWeight="Bold" Foreground="#1E293B"/>
+                                            <TextBlock Text="Auto-configured &amp; active" FontSize="11" Foreground="#64748B"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Background="Transparent" BorderThickness="0" Padding="4"
+                                                Command="{Binding OpenProfileDropdownCommand}" Cursor="Hand">
+                                            <TextBlock Text="⚙" FontSize="14" Foreground="#64748B"/>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Open Dropdown List -->
+                                <Border IsVisible="{Binding IsProfileDropdownOpen}" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="6">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#000000" BlurRadius="12" Opacity="0.08"/>
+                                    </Border.Effect>
+                                    <ItemsControl ItemsSource="{Binding AvailableProfiles}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Classes="ProfileDropdownBtn" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectProfileCommand}" CommandParameter="{Binding Name}">
+                                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                                        <TextBlock Text="📄" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="12" FontWeight="SemiBold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                                        <TextBlock Grid.Column="2" Text="✓" FontSize="12" FontWeight="Bold" Foreground="#06B6D4" IsVisible="{Binding IsSelected}" VerticalAlignment="Center"/>
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Border>
                             </StackPanel>
 
-                            <!-- Cyan Circular Radar Display -->
-                            <Grid HorizontalAlignment="Center" Width="130" Height="130">
-                                <!-- Concentric Cyan Circles -->
-                                <Ellipse Width="130" Height="130" Stroke="#A5F3FC" StrokeThickness="1"/>
-                                <Ellipse Width="90" Height="90" Stroke="#67E8F9" StrokeThickness="1.2" StrokeDashArray="2,2"/>
-                                <Ellipse Width="46" Height="46" Stroke="#22D3EE" StrokeThickness="1.5"/>
+                            <!-- Responsive Viewbox for Controller Canvas -->
+                            <Viewbox Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" MaxHeight="350">
+                                <Canvas Width="560" Height="320">
+                                    
+                                    <!-- 1. Controller Outer Glow & Halo Rim Light -->
+                                    <Path Data="M 125,50 C 175,15 385,15 435,50 C 520,115 505,255 455,290 C 410,320 370,270 345,225 C 305,208 255,208 215,225 C 190,270 150,320 105,290 C 55,255 40,115 125,50 Z"
+                                          Fill="#FFFFFF" Stroke="#E2E8F0" StrokeThickness="2.5" Opacity="0.96">
+                                        <Path.Effect>
+                                            <DropShadowEffect Color="#38BDF8" BlurRadius="28" Opacity="0.16"/>
+                                        </Path.Effect>
+                                    </Path>
 
-                                <!-- Crosshairs -->
-                                <Line StartPoint="65,0" EndPoint="65,130" Stroke="#A5F3FC" StrokeThickness="1"/>
-                                <Line StartPoint="0,65" EndPoint="130,65" Stroke="#A5F3FC" StrokeThickness="1"/>
+                                    <!-- 2. Controller Translucent Glassmorphism Gradient Fill (Cyan Left, Magenta Right) -->
+                                    <Path Data="M 130,55 C 178,20 382,20 430,55 C 510,118 495,248 450,280 C 405,310 368,262 345,220 C 305,205 255,205 215,220 C 192,262 155,310 110,280 C 65,248 50,118 130,55 Z"
+                                          Opacity="0.88">
+                                        <Path.Fill>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Offset="0.0" Color="#E0F2FE"/>
+                                                <GradientStop Offset="0.4" Color="#FFFFFF"/>
+                                                <GradientStop Offset="0.7" Color="#FDF4FF"/>
+                                                <GradientStop Offset="1.0" Color="#F5D0FE"/>
+                                            </LinearGradientBrush>
+                                        </Path.Fill>
+                                    </Path>
 
-                                <!-- Dynamic Position Dot (Cyan Glow) -->
-                                <Canvas Width="130" Height="130">
-                                    <Ellipse Canvas.Left="{Binding LeftStickDotLeft}" Canvas.Top="{Binding LeftStickDotTop}" Width="12" Height="12" Fill="#06B6D4">
-                                        <Ellipse.Effect>
-                                            <DropShadowEffect Color="#06B6D4" BlurRadius="10" Opacity="0.9"/>
-                                        </Ellipse.Effect>
-                                    </Ellipse>
+                                    <!-- 3. Neon Iridescent Contour Highlight -->
+                                    <Path Data="M 140,65 C 180,32 380,32 420,65 C 485,120 470,230 435,260 C 395,290 360,245 340,210 C 300,195 260,195 220,210 C 200,245 165,290 125,260 C 90,230 75,120 140,65 Z"
+                                          Stroke="#C084FC" StrokeThickness="1" Opacity="0.3" Fill="Transparent"/>
+
+                                    <!-- 4. Shoulder Labels (LB & RT) in Glowing Neon Colors -->
+                                    <!-- LB Neon Label (Top-Left) -->
+                                    <TextBlock Canvas.Left="150" Canvas.Top="38" Text="LB" FontSize="12" FontWeight="ExtraBold" Foreground="#06B6D4">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="#06B6D4" BlurRadius="8" Opacity="0.7"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+
+                                    <!-- RT Neon Label (Top-Right) -->
+                                    <TextBlock Canvas.Left="395" Canvas.Top="38" Text="RT" FontSize="12" FontWeight="ExtraBold" Foreground="#C084FC">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="#C084FC" BlurRadius="8" Opacity="0.7"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+
+                                    <!-- 5. Physical Shoulder / Trigger Buttons (LT, LB, RB, RT) -->
+                                    <Button Canvas.Left="95" Canvas.Top="22" Classes="InteractivePadBtn" Width="44" Height="22" CornerRadius="6"
+                                            Background="#E0F2FE" BorderBrush="#38BDF8" BorderThickness="1.5"
+                                            Command="{Binding StartListeningForButtonCommand}" CommandParameter="LT_Button">
+                                        <TextBlock Text="LT" FontSize="10" FontWeight="Bold" Foreground="#0284C7"/>
+                                    </Button>
+                                    <Button Canvas.Left="140" Canvas.Top="15" Classes="InteractivePadBtn" Width="48" Height="20" CornerRadius="5"
+                                            Background="#F1F5F9" BorderBrush="#94A3B8" BorderThickness="1"
+                                            Command="{Binding StartListeningForButtonCommand}" CommandParameter="LB">
+                                        <TextBlock Text="LB" FontSize="10" FontWeight="Bold" Foreground="#475569"/>
+                                    </Button>
+                                    <Button Canvas.Left="372" Canvas.Top="15" Classes="InteractivePadBtn" Width="48" Height="20" CornerRadius="5"
+                                            Background="#F1F5F9" BorderBrush="#94A3B8" BorderThickness="1"
+                                            Command="{Binding StartListeningForButtonCommand}" CommandParameter="RB">
+                                        <TextBlock Text="RB" FontSize="10" FontWeight="Bold" Foreground="#475569"/>
+                                    </Button>
+                                    <Button Canvas.Left="421" Canvas.Top="22" Classes="InteractivePadBtn" Width="44" Height="22" CornerRadius="6"
+                                            Background="#F5D0FE" BorderBrush="#A855F7" BorderThickness="1.5"
+                                            Command="{Binding StartListeningForButtonCommand}" CommandParameter="RT_Button">
+                                        <TextBlock Text="RT" FontSize="10" FontWeight="Bold" Foreground="#7C3AED"/>
+                                    </Button>
+
+                                    <!-- 6. Xbox Guide Button & Center Controls -->
+                                    <!-- Xbox Guide Logo Button -->
+                                    <Button Canvas.Left="263" Canvas.Top="68" Classes="InteractivePadBtn" Width="34" Height="34" CornerRadius="17"
+                                            Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="2"
+                                            Command="{Binding StartListeningForButtonCommand}" CommandParameter="Guide">
+                                        <Button.Effect>
+                                            <DropShadowEffect Color="#000000" BlurRadius="8" Opacity="0.1"/>
+                                        </Button.Effect>
+                                        <Path Data="M 10,7 C 7,12 11,21 17,27 C 23,21 27,12 24,7 C 20,9 14,9 10,7 Z" 
+                                              Fill="#10B981" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+
+                                    <!-- View / Back Button (Left) -->
+                                    <Button Canvas.Left="222" Canvas.Top="102" Classes="InteractivePadBtn" Width="22" Height="22" CornerRadius="11"
+                                            Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1"
+                                            Command="{Binding StartListeningForButtonCommand}" CommandParameter="Back">
+                                        <TextBlock Text="⧉" FontSize="11" Foreground="#64748B"/>
+                                    </Button>
+
+                                    <!-- Menu / Start Button (Right) -->
+                                    <Button Canvas.Left="316" Canvas.Top="102" Classes="InteractivePadBtn" Width="22" Height="22" CornerRadius="11"
+                                            Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1"
+                                            Command="{Binding StartListeningForButtonCommand}" CommandParameter="Start">
+                                        <TextBlock Text="☰" FontSize="11" Foreground="#64748B"/>
+                                    </Button>
+
+                                    <!-- 7. Left Analog Stick (Interactive + Dynamic Displacement) -->
+                                    <Canvas Canvas.Left="125" Canvas.Top="85" Width="64" Height="64">
+                                        <!-- Outer Well -->
+                                        <Ellipse Width="64" Height="64" Fill="#F1F5F9" Stroke="#BAE6FD" StrokeThickness="2"/>
+                                        <!-- Dynamic Thumbstick with TranslateTransform -->
+                                        <Button Canvas.Left="7" Canvas.Top="7" Width="50" Height="50" CornerRadius="25"
+                                                Classes="InteractivePadBtn" Background="#E0F2FE" BorderBrush="#06B6D4" BorderThickness="2"
+                                                Command="{Binding StartListeningForButtonCommand}" CommandParameter="LS">
+                                            <Button.RenderTransform>
+                                                <TranslateTransform X="{Binding LeftStickVisualOffsetX}" Y="{Binding LeftStickVisualOffsetY}"/>
+                                            </Button.RenderTransform>
+                                            <Grid>
+                                                <Ellipse Width="34" Height="34" Fill="#38BDF8" Opacity="0.85"/>
+                                                <Ellipse Width="20" Height="20" Stroke="#FFFFFF" StrokeThickness="1.5" Fill="Transparent" Opacity="0.8"/>
+                                                <Ellipse Width="8" Height="8" Fill="#FFFFFF" Opacity="0.9"/>
+                                            </Grid>
+                                        </Button>
+                                    </Canvas>
+
+                                    <!-- 8. D-Pad (4-Way Cross with Individual Highlights) -->
+                                    <Canvas Canvas.Left="175" Canvas.Top="155" Width="60" Height="60">
+                                        <!-- D-Pad Base Cross -->
+                                        <Path Data="M 20,0 L 40,0 L 40,20 L 60,20 L 60,40 L 40,40 L 40,60 L 20,60 L 20,40 L 0,40 L 0,20 L 20,20 Z"
+                                              Fill="#F1F5F9" Stroke="#38BDF8" StrokeThickness="2"/>
+                                        
+                                        <!-- Up Arrow -->
+                                        <Button Canvas.Left="20" Canvas.Top="0" Width="20" Height="20" Classes="InteractivePadBtn" Background="Transparent" BorderThickness="0"
+                                                Command="{Binding StartListeningForButtonCommand}" CommandParameter="DPadUp">
+                                            <TextBlock Text="▲" FontSize="10" Foreground="#0284C7"/>
+                                        </Button>
+                                        <!-- Down Arrow -->
+                                        <Button Canvas.Left="20" Canvas.Top="40" Width="20" Height="20" Classes="InteractivePadBtn" Background="Transparent" BorderThickness="0"
+                                                Command="{Binding StartListeningForButtonCommand}" CommandParameter="DPadDown">
+                                            <TextBlock Text="▼" FontSize="10" Foreground="#0284C7"/>
+                                        </Button>
+                                        <!-- Left Arrow -->
+                                        <Button Canvas.Left="0" Canvas.Top="20" Width="20" Height="20" Classes="InteractivePadBtn" Background="Transparent" BorderThickness="0"
+                                                Command="{Binding StartListeningForButtonCommand}" CommandParameter="DPadLeft">
+                                            <TextBlock Text="◀" FontSize="10" Foreground="#0284C7"/>
+                                        </Button>
+                                        <!-- Right Arrow -->
+                                        <Button Canvas.Left="40" Canvas.Top="20" Width="20" Height="20" Classes="InteractivePadBtn" Background="Transparent" BorderThickness="0"
+                                                Command="{Binding StartListeningForButtonCommand}" CommandParameter="DPadRight">
+                                            <TextBlock Text="▶" FontSize="10" Foreground="#0284C7"/>
+                                        </Button>
+                                    </Canvas>
+
+                                    <!-- 9. Right Analog Stick (Interactive + Dynamic Displacement) -->
+                                    <Canvas Canvas.Left="265" Canvas.Top="155" Width="64" Height="64">
+                                        <!-- Outer Well -->
+                                        <Ellipse Width="64" Height="64" Fill="#FDF4FF" Stroke="#DDD6FE" StrokeThickness="2"/>
+                                        <!-- Dynamic Thumbstick with TranslateTransform -->
+                                        <Button Canvas.Left="7" Canvas.Top="7" Width="50" Height="50" CornerRadius="25"
+                                                Classes="InteractivePadBtn" Background="#F5D0FE" BorderBrush="#A855F7" BorderThickness="2"
+                                                Command="{Binding StartListeningForButtonCommand}" CommandParameter="RS">
+                                            <Button.RenderTransform>
+                                                <TranslateTransform X="{Binding RightStickVisualOffsetX}" Y="{Binding RightStickVisualOffsetY}"/>
+                                            </Button.RenderTransform>
+                                            <Grid>
+                                                <Ellipse Width="34" Height="34" Fill="#C084FC" Opacity="0.85"/>
+                                                <Ellipse Width="20" Height="20" Stroke="#FFFFFF" StrokeThickness="1.5" Fill="Transparent" Opacity="0.8"/>
+                                                <Ellipse Width="8" Height="8" Fill="#FFFFFF" Opacity="0.9"/>
+                                            </Grid>
+                                        </Button>
+                                    </Canvas>
+
+                                    <!-- 10. ABXY Action Diamond (Top-Right) -->
+                                    <!-- Y Button (Top, Yellow) -->
+                                    <Button Canvas.Left="395" Canvas.Top="72" Classes="InteractivePadBtn" Width="30" Height="30" CornerRadius="15"
+                                            Background="#FEF9C3" BorderBrush="#EAB308" BorderThickness="2"
+                                            Command="{Binding StartListeningForButtonCommand}" CommandParameter="Y">
+                                        <Button.Effect>
+                                            <DropShadowEffect Color="#EAB308" BlurRadius="10" Opacity="0.5"/>
+                                        </Button.Effect>
+                                        <TextBlock Text="Y" FontSize="13" FontWeight="ExtraBold" Foreground="#CA8A04"/>
+                                    </Button>
+
+                                    <!-- X Button (Left, Blue) -->
+                                    <Button Canvas.Left="362" Canvas.Top="105" Classes="InteractivePadBtn" Width="30" Height="30" CornerRadius="15"
+                                            Background="#BAE6FD" BorderBrush="#0284C7" BorderThickness="2"
+                                            Command="{Binding StartListeningForButtonCommand}" CommandParameter="X">
+                                        <Button.Effect>
+                                            <DropShadowEffect Color="#0284C7" BlurRadius="10" Opacity="0.5"/>
+                                        </Button.Effect>
+                                        <TextBlock Text="X" FontSize="13" FontWeight="ExtraBold" Foreground="#0369A1"/>
+                                    </Button>
+
+                                    <!-- B Button (Right, Red) -->
+                                    <Button Canvas.Left="428" Canvas.Top="105" Classes="InteractivePadBtn" Width="30" Height="30" CornerRadius="15"
+                                            Background="#FECDD3" BorderBrush="#E11D48" BorderThickness="2"
+                                            Command="{Binding StartListeningForButtonCommand}" CommandParameter="B">
+                                        <Button.Effect>
+                                            <DropShadowEffect Color="#E11D48" BlurRadius="10" Opacity="0.5"/>
+                                        </Button.Effect>
+                                        <TextBlock Text="B" FontSize="13" FontWeight="ExtraBold" Foreground="#BE123C"/>
+                                    </Button>
+
+                                    <!-- A Button (Bottom, Cyan/Green) -->
+                                    <Button Canvas.Left="395" Canvas.Top="138" Classes="InteractivePadBtn" Width="30" Height="30" CornerRadius="15"
+                                            Background="#E0F2FE" BorderBrush="#06B6D4" BorderThickness="2"
+                                            Command="{Binding StartListeningForButtonCommand}" CommandParameter="A">
+                                        <Button.Effect>
+                                            <DropShadowEffect Color="#06B6D4" BlurRadius="10" Opacity="0.6"/>
+                                        </Button.Effect>
+                                        <TextBlock Text="A" FontSize="13" FontWeight="ExtraBold" Foreground="#0284C7"/>
+                                    </Button>
+
+                                    <!-- 11. FLOATING "LISTENING..." ANNOTATION & LINE (Matches Screenshot) -->
+                                    <Canvas IsVisible="{Binding IsListeningForBinding}">
+                                        <!-- Glowing Cyan Anchor Point on target button -->
+                                        <Ellipse Canvas.Left="{Binding BubbleAnchorX}" Canvas.Top="{Binding BubbleAnchorY}" Width="16" Height="16" Fill="#06B6D4">
+                                            <Ellipse.Effect>
+                                                <DropShadowEffect Color="#06B6D4" BlurRadius="14" Opacity="0.95"/>
+                                            </Ellipse.Effect>
+                                        </Ellipse>
+                                        <Ellipse Canvas.Left="{Binding BubbleAnchorX}" Canvas.Top="{Binding BubbleAnchorY}" Margin="4,4,0,0" Width="8" Height="8" Fill="#FFFFFF"/>
+
+                                        <!-- Dotted Connection Line -->
+                                        <Line StartPoint="{Binding BubbleStartPoint}" EndPoint="{Binding BubbleEndPoint}" 
+                                              Stroke="#06B6D4" StrokeThickness="2" StrokeDashArray="3,3"/>
+
+                                        <!-- Annotation Callout Bubble -->
+                                        <Border Canvas.Left="{Binding BubbleLeft}" Canvas.Top="{Binding BubbleTop}" Width="205" 
+                                                Background="#FFFFFF" BorderBrush="#BAE6FD" BorderThickness="1.5" CornerRadius="16" Padding="14,10">
+                                            <Border.Effect>
+                                                <DropShadowEffect Color="#06B6D4" BlurRadius="18" Opacity="0.25"/>
+                                            </Border.Effect>
+                                            <StackPanel Spacing="4">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                        <Ellipse Width="10" Height="10" Stroke="#06B6D4" StrokeThickness="2.5" Fill="Transparent"/>
+                                                        <TextBlock Text="Listening..." FontSize="13" FontWeight="Bold" Foreground="#0891B2"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Background="Transparent" BorderThickness="0" Padding="0" 
+                                                            Command="{Binding CancelListeningCommand}" Cursor="Hand">
+                                                        <TextBlock Text="✕" FontSize="11" Foreground="#94A3B8"/>
+                                                    </Button>
+                                                </Grid>
+                                                <TextBlock Text="{Binding ListeningInstruction}" FontSize="11" Foreground="#64748B" TextWrapping="Wrap"/>
+                                                <TextBlock Text="Press desired gamepad button now" FontSize="10" Foreground="#94A3B8" FontStyle="Italic"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Canvas>
+
                                 </Canvas>
-                            </Grid>
-
-                            <!-- Position Coordinates Footer -->
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
-                                <TextBlock Text="Position" FontSize="12" Foreground="#64748B"/>
-                                <Ellipse Width="6" Height="6" Fill="#06B6D4" VerticalAlignment="Center" Margin="2,0"/>
-                                <TextBlock Text="{Binding LeftStickPositionText}" FontSize="12" FontWeight="Bold" Foreground="#0891B2"/>
-                            </StackPanel>
-                        </StackPanel>
+                            </Viewbox>
+                        </Grid>
                     </Border>
 
-                    <!-- CARD 2: RIGHT ANALOG STICK RADAR -->
-                    <Border Grid.Column="1" Classes="FluentCard" Padding="20" Margin="5,0,5,0">
-                        <StackPanel Spacing="14">
-                            <!-- Card Header -->
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Ellipse Width="9" Height="9" Fill="#8B5CF6"/>
-                                <TextBlock Text="Right Analog Stick" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
-                            </StackPanel>
-
-                            <!-- Violet Circular Radar Display -->
-                            <Grid HorizontalAlignment="Center" Width="130" Height="130">
-                                <!-- Concentric Violet Circles -->
-                                <Ellipse Width="130" Height="130" Stroke="#DDD6FE" StrokeThickness="1"/>
-                                <Ellipse Width="90" Height="90" Stroke="#C4B5FD" StrokeThickness="1.2" StrokeDashArray="2,2"/>
-                                <Ellipse Width="46" Height="46" Stroke="#A78BFA" StrokeThickness="1.5"/>
-
-                                <!-- Crosshairs -->
-                                <Line StartPoint="65,0" EndPoint="65,130" Stroke="#DDD6FE" StrokeThickness="1"/>
-                                <Line StartPoint="0,65" EndPoint="130,65" Stroke="#DDD6FE" StrokeThickness="1"/>
-
-                                <!-- Dynamic Position Dot (Violet Glow) -->
-                                <Canvas Width="130" Height="130">
-                                    <Ellipse Canvas.Left="{Binding RightStickDotLeft}" Canvas.Top="{Binding RightStickDotTop}" Width="12" Height="12" Fill="#8B5CF6">
-                                        <Ellipse.Effect>
-                                            <DropShadowEffect Color="#8B5CF6" BlurRadius="10" Opacity="0.9"/>
-                                        </Ellipse.Effect>
-                                    </Ellipse>
-                                </Canvas>
-                            </Grid>
-
-                            <!-- Position Coordinates Footer -->
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
-                                <TextBlock Text="Position" FontSize="12" Foreground="#64748B"/>
-                                <Ellipse Width="6" Height="6" Fill="#8B5CF6" VerticalAlignment="Center" Margin="2,0"/>
-                                <TextBlock Text="{Binding RightStickPositionText}" FontSize="12" FontWeight="Bold" Foreground="#7C3AED"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- CARD 3: STICK SETTINGS SLIDERS -->
-                    <Border Grid.Column="2" Classes="FluentCard" Padding="20" Margin="10,0,0,0">
-                        <StackPanel Spacing="14">
-                            <!-- Card Header -->
-                            <TextBlock Text="Stick Settings" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
-
-                            <!-- Deadzone Setting Row -->
-                            <StackPanel Spacing="3">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="Deadzone" FontSize="13" FontWeight="SemiBold" Foreground="#1E293B"/>
-                                        <TextBlock Text="ⓘ" FontSize="12" Foreground="#94A3B8"/>
-                                    </StackPanel>
-                                    <Border Grid.Column="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="8,2">
-                                        <TextBlock Text="{Binding Deadzone, StringFormat='{}{0:F2}'}" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
-                                    </Border>
-                                </Grid>
-                                <Slider Minimum="0.0" Maximum="0.30" Value="{Binding Deadzone}" Foreground="#06B6D4"/>
-                                <TextBlock Text="Ignore small stick movements" FontSize="11" Foreground="#94A3B8"/>
-                            </StackPanel>
-
-                            <!-- Sensitivity Setting Row -->
-                            <StackPanel Spacing="3">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="Sensitivity" FontSize="13" FontWeight="SemiBold" Foreground="#1E293B"/>
-                                        <TextBlock Text="ⓘ" FontSize="12" Foreground="#94A3B8"/>
-                                    </StackPanel>
-                                    <Border Grid.Column="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="8,2">
-                                        <TextBlock Text="{Binding Sensitivity, StringFormat='{}{0:F2}'}" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
-                                    </Border>
-                                </Grid>
-                                <Slider Minimum="0.5" Maximum="2.5" Value="{Binding Sensitivity}" Foreground="#8B5CF6"/>
-                                <TextBlock Text="Overall response multiplier" FontSize="11" Foreground="#94A3B8"/>
-                            </StackPanel>
-
-                            <!-- Reset to defaults Button -->
-                            <Button Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left"
-                                    Command="{Binding ResetToDefaultsCommand}" Cursor="Hand">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="🔄" FontSize="12" Foreground="#0891B2"/>
-                                    <TextBlock Text="Reset to defaults" FontSize="12" FontWeight="SemiBold" Foreground="#0891B2"/>
+                    <!-- LOWER 3 CARDS ROW (LEFT STICK, RIGHT STICK, STICK SETTINGS) -->
+                    <Grid ColumnDefinitions="*,*,*">
+                        <!-- CARD 1: LEFT ANALOG STICK RADAR -->
+                        <Border Grid.Column="0" Classes="FluentCard" Padding="20" Margin="0,0,10,0">
+                            <StackPanel Spacing="14">
+                                <!-- Card Header -->
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Ellipse Width="9" Height="9" Fill="#06B6D4"/>
+                                    <TextBlock Text="Left Analog Stick" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
                                 </StackPanel>
-                            </Button>
-                        </StackPanel>
+
+                                <!-- Cyan Circular Radar Display -->
+                                <Grid HorizontalAlignment="Center" Width="130" Height="130">
+                                    <!-- Concentric Cyan Circles -->
+                                    <Ellipse Width="130" Height="130" Stroke="#A5F3FC" StrokeThickness="1"/>
+                                    <Ellipse Width="90" Height="90" Stroke="#67E8F9" StrokeThickness="1.2" StrokeDashArray="2,2"/>
+                                    <Ellipse Width="46" Height="46" Stroke="#22D3EE" StrokeThickness="1.5"/>
+
+                                    <!-- Crosshairs -->
+                                    <Line StartPoint="65,0" EndPoint="65,130" Stroke="#A5F3FC" StrokeThickness="1"/>
+                                    <Line StartPoint="0,65" EndPoint="130,65" Stroke="#A5F3FC" StrokeThickness="1"/>
+
+                                    <!-- Dynamic Position Dot (Cyan Glow) -->
+                                    <Canvas Width="130" Height="130">
+                                        <Ellipse Canvas.Left="{Binding LeftStickDotLeft}" Canvas.Top="{Binding LeftStickDotTop}" Width="12" Height="12" Fill="#06B6D4">
+                                            <Ellipse.Effect>
+                                                <DropShadowEffect Color="#06B6D4" BlurRadius="10" Opacity="0.9"/>
+                                            </Ellipse.Effect>
+                                        </Ellipse>
+                                    </Canvas>
+                                </Grid>
+
+                                <!-- Position Coordinates Footer -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                                    <TextBlock Text="Position" FontSize="12" Foreground="#64748B"/>
+                                    <Ellipse Width="6" Height="6" Fill="#06B6D4" VerticalAlignment="Center" Margin="2,0"/>
+                                    <TextBlock Text="{Binding LeftStickPositionText}" FontSize="12" FontWeight="Bold" Foreground="#0891B2"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- CARD 2: RIGHT ANALOG STICK RADAR -->
+                        <Border Grid.Column="1" Classes="FluentCard" Padding="20" Margin="5,0,5,0">
+                            <StackPanel Spacing="14">
+                                <!-- Card Header -->
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Ellipse Width="9" Height="9" Fill="#8B5CF6"/>
+                                    <TextBlock Text="Right Analog Stick" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
+                                </StackPanel>
+
+                                <!-- Violet Circular Radar Display -->
+                                <Grid HorizontalAlignment="Center" Width="130" Height="130">
+                                    <!-- Concentric Violet Circles -->
+                                    <Ellipse Width="130" Height="130" Stroke="#DDD6FE" StrokeThickness="1"/>
+                                    <Ellipse Width="90" Height="90" Stroke="#C4B5FD" StrokeThickness="1.2" StrokeDashArray="2,2"/>
+                                    <Ellipse Width="46" Height="46" Stroke="#A78BFA" StrokeThickness="1.5"/>
+
+                                    <!-- Crosshairs -->
+                                    <Line StartPoint="65,0" EndPoint="65,130" Stroke="#DDD6FE" StrokeThickness="1"/>
+                                    <Line StartPoint="0,65" EndPoint="130,65" Stroke="#DDD6FE" StrokeThickness="1"/>
+
+                                    <!-- Dynamic Position Dot (Violet Glow) -->
+                                    <Canvas Width="130" Height="130">
+                                        <Ellipse Canvas.Left="{Binding RightStickDotLeft}" Canvas.Top="{Binding RightStickDotTop}" Width="12" Height="12" Fill="#8B5CF6">
+                                            <Ellipse.Effect>
+                                                <DropShadowEffect Color="#8B5CF6" BlurRadius="10" Opacity="0.9"/>
+                                            </Ellipse.Effect>
+                                        </Ellipse>
+                                    </Canvas>
+                                </Grid>
+
+                                <!-- Position Coordinates Footer -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                                    <TextBlock Text="Position" FontSize="12" Foreground="#64748B"/>
+                                    <Ellipse Width="6" Height="6" Fill="#8B5CF6" VerticalAlignment="Center" Margin="2,0"/>
+                                    <TextBlock Text="{Binding RightStickPositionText}" FontSize="12" FontWeight="Bold" Foreground="#7C3AED"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- CARD 3: STICK SETTINGS SLIDERS -->
+                        <Border Grid.Column="2" Classes="FluentCard" Padding="20" Margin="10,0,0,0">
+                            <StackPanel Spacing="14">
+                                <!-- Card Header -->
+                                <TextBlock Text="Stick Settings" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
+
+                                <!-- Deadzone Setting Row -->
+                                <StackPanel Spacing="3">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="Deadzone" FontSize="13" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                            <TextBlock Text="ⓘ" FontSize="12" Foreground="#94A3B8"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="8,2">
+                                            <TextBlock Text="{Binding Deadzone, StringFormat='{}{0:F2}'}" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
+                                        </Border>
+                                    </Grid>
+                                    <Slider Minimum="0.0" Maximum="0.30" Value="{Binding Deadzone}" Foreground="#06B6D4"/>
+                                    <TextBlock Text="Ignore small stick movements" FontSize="11" Foreground="#94A3B8"/>
+                                </StackPanel>
+
+                                <!-- Sensitivity Setting Row -->
+                                <StackPanel Spacing="3">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="Sensitivity" FontSize="13" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                            <TextBlock Text="ⓘ" FontSize="12" Foreground="#94A3B8"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="8,2">
+                                            <TextBlock Text="{Binding Sensitivity, StringFormat='{}{0:F2}'}" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
+                                        </Border>
+                                    </Grid>
+                                    <Slider Minimum="0.5" Maximum="2.5" Value="{Binding Sensitivity}" Foreground="#8B5CF6"/>
+                                    <TextBlock Text="Overall response multiplier" FontSize="11" Foreground="#94A3B8"/>
+                                </StackPanel>
+
+                                <!-- Reset to defaults Button -->
+                                <Button Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left"
+                                        Command="{Binding ResetToDefaultsCommand}" Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="🔄" FontSize="12" Foreground="#0891B2"/>
+                                        <TextBlock Text="Reset to defaults" FontSize="12" FontWeight="SemiBold" Foreground="#0891B2"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+
+                <!-- TAB 2: GUIDE & SETUP CENTER -->
+                <StackPanel Spacing="16" IsVisible="{Binding IsGuideTabSelected}">
+                    <!-- Guide Header Banner -->
+                    <Border Classes="FluentCard" Padding="20" Background="#FFFFFF">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <Border Background="#F5F3FF" CornerRadius="8" Padding="8,4">
+                                        <TextBlock Text="📖 Guide Officiel" FontSize="12" FontWeight="Bold" Foreground="#8B5CF6"/>
+                                    </Border>
+                                    <TextBlock Text="Centre d'Aide &amp; Configuration Pas-à-Pas" FontSize="18" FontWeight="Bold" Foreground="#1E293B"/>
+                                </StackPanel>
+                                <TextBlock Text="Apprenez à configurer vos jeux PC et mobiles avec votre manette, calibrer vos sticks et éliminer les conflits." FontSize="13" Foreground="#64748B"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="#ECFDF5" BorderBrush="#A7F3D0" BorderThickness="1" CornerRadius="12" Padding="14,10" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="⚡" FontSize="14"/>
+                                    <TextBlock Text="{Binding VirtualControllerStatus}" FontSize="12" FontWeight="Bold" Foreground="#059669"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </Border>
-                </Grid>
+
+                    <!-- 4 Categorized Cards Grid -->
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+                        <!-- CARD 1: PC GAMING (XBOX EMULATION) -->
+                        <Border Grid.Row="0" Grid.Column="0" Classes="FluentCard" Padding="20" Margin="0,0,8,16">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Border Width="32" Height="32" CornerRadius="8" Background="#EEF2FF">
+                                        <TextBlock Text="🎮" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel>
+                                        <TextBlock Text="Cas 1 : Jouer sur PC (Steam, Game Pass, Émulateurs)" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
+                                        <TextBlock Text="Mode Émulation Xbox 360 Directe" FontSize="11" Foreground="#6366F1" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Text="Permet d'utiliser n'importe quelle manette USB/Bluetooth (Ucom, générique, DirectInput) comme une manette Xbox 360 officielle native sous Windows." FontSize="12" Foreground="#475569" TextWrapping="Wrap"/>
+                                
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Étapes pas-à-pas :" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
+                                        <TextBlock Text="1. Cliquez sur le bouton '🎮 Xbox 360 Direct (PC)' dans l'en-tête." FontSize="12" Foreground="#334155"/>
+                                        <TextBlock Text="2. Lancez votre jeu (Steam, Xbox Game Pass, Epic Games, PCSX2, RPCS3, etc.)." FontSize="12" Foreground="#334155"/>
+                                        <TextBlock Text="3. Le jeu détecte immédiatement la manette Xbox 360 avec vibrations et mapping complet." FontSize="12" Foreground="#334155"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="8" Padding="10,8">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="✓" FontSize="12" FontWeight="Bold" Foreground="#16A34A"/>
+                                        <TextBlock Text="Zéro outil tiers requis (ni XOutput, ni x360ce) &amp; zéro conflit double-input." FontSize="11" FontWeight="SemiBold" Foreground="#16A34A" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- CARD 2: MOBILE GAMING (WI-FI UDP BRIDGE) -->
+                        <Border Grid.Row="0" Grid.Column="1" Classes="FluentCard" Padding="20" Margin="8,0,0,16">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Border Width="32" Height="32" CornerRadius="8" Background="#ECFEFF">
+                                        <TextBlock Text="📱" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel>
+                                        <TextBlock Text="Cas 2 : Jouer sur Mobile (COD Mobile, Delta Force)" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
+                                        <TextBlock Text="Mode Wi-Fi UDP Bridge Haute Vitesse" FontSize="11" Foreground="#0891B2" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Text="Transmet instantanément les boutons et sticks vers votre smartphone / tablette Android &amp; iOS via le réseau Wi-Fi local à 120Hz." FontSize="12" Foreground="#475569" TextWrapping="Wrap"/>
+                                
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Étapes pas-à-pas :" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
+                                        <TextBlock Text="1. Sélectionnez le mode '📡 Wi-Fi Bridge (Mobile)' dans l'en-tête." FontSize="12" Foreground="#334155"/>
+                                        <TextBlock Text="2. Lancez l'application mobile HTUP Controller Client sur votre téléphone." FontSize="12" Foreground="#334155"/>
+                                        <TextBlock Text="3. Scannez le QR Code ou saisissez l'adresse IP affichée sur le pont." FontSize="12" Foreground="#334155"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Background="#ECFEFF" BorderBrush="#BAE6FD" BorderThickness="1" CornerRadius="8" Padding="10,8">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="⚡" FontSize="12" FontWeight="Bold" Foreground="#0284C7"/>
+                                        <TextBlock Text="Latence ultra-faible (&lt; 3ms) avec profil de remapping optimisé pour les jeux tactiles." FontSize="11" FontWeight="SemiBold" Foreground="#0284C7" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- CARD 3: REMAPPING & CALIBRATION -->
+                        <Border Grid.Row="1" Grid.Column="0" Classes="FluentCard" Padding="20" Margin="0,0,8,0">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Border Width="32" Height="32" CornerRadius="8" Background="#FEF3C7">
+                                        <TextBlock Text="⚡" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel>
+                                        <TextBlock Text="Cas 3 : Remapping &amp; Calibration Anti-Drift" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
+                                        <TextBlock Text="Assistant Auto-Remap &amp; Courbes de Réponse" FontSize="11" Foreground="#D97706" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Text="Adaptez les boutons de votre manette à la disposition exacte souhaitée et compensez l'usure mécanique des sticks analogiques." FontSize="12" Foreground="#475569" TextWrapping="Wrap"/>
+                                
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Conseils de réglage :" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
+                                        <TextBlock Text="• Auto-Remap : Cliquez sur '⚡ Auto-Remap' et suivez les instructions visuelles à l'écran." FontSize="12" Foreground="#334155"/>
+                                        <TextBlock Text="• Deadzone : Si le radar montre un stick qui dérive au repos, augmentez le slider Deadzone à 0.15." FontSize="12" Foreground="#334155"/>
+                                        <TextBlock Text="• Sensibilité : Ajustez entre 1.0 et 1.5 selon vos réflexes et le genre de jeu." FontSize="12" Foreground="#334155"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- CARD 4: PREVENTING CONFLICTS & TROUBLESHOOTING -->
+                        <Border Grid.Row="1" Grid.Column="1" Classes="FluentCard" Padding="20" Margin="8,0,0,0">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Border Width="32" Height="32" CornerRadius="8" Background="#FEE2E2">
+                                        <TextBlock Text="🛡️" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel>
+                                        <TextBlock Text="Cas 4 : Prévention des Conflits &amp; Double Input" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
+                                        <TextBlock Text="Bonnes Pratiques &amp; Détection Windows" FontSize="11" Foreground="#DC2626" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Text="Assure une expérience de jeu fluide sans conflit de double saisie ni périphériques fantômes après la fermeture." FontSize="12" Foreground="#475569" TextWrapping="Wrap"/>
+                                
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Résolution automatique des conflits :" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
+                                        <TextBlock Text="• Anti-Double Input : Lorsque le mode Xbox 360 est actif, le flux réseau UDP est coupé automatiquement." FontSize="12" Foreground="#334155"/>
+                                        <TextBlock Text="• Déconnexion Propre : La fermeture de l'application retire immédiatement le périphérique virtuel de Windows." FontSize="12" Foreground="#334155"/>
+                                        <TextBlock Text="• Test rapide : Tapez 'joy.cpl' dans Windows pour visualiser votre manette virtuelle Xbox 360." FontSize="12" Foreground="#334155"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
 
             </StackPanel>
         </ScrollViewer>

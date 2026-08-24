@@ -20,7 +20,19 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly BridgeEngine _engine;
 
     // Navigation Tabs
-    [ObservableProperty] private string _selectedTab = "Controller"; // Controller, Mapping, Profiles, Settings
+    [ObservableProperty] private string _selectedTab = "Controller"; // Controller, Guide, Mapping, Profiles, Settings
+    [ObservableProperty] private bool _isControllerTabSelected = true;
+    [ObservableProperty] private bool _isGuideTabSelected = false;
+    [ObservableProperty] private bool _isMappingTabSelected = false;
+    [ObservableProperty] private bool _isProfilesTabSelected = false;
+    [ObservableProperty] private bool _isSettingsTabSelected = false;
+    [ObservableProperty] private string _guideActiveSection = "pc"; // "pc", "mobile", "mapping", "conflicts"
+
+    // Operating Modes: Network Bridge (Mobile UDP) vs Xbox 360 Local Emulation (PC Direct)
+    [ObservableProperty] private bool _isXboxEmulationMode = false;
+    [ObservableProperty] private string _operatingModeName = "📡 Wi-Fi UDP Bridge (Mobile)";
+    [ObservableProperty] private string _virtualControllerStatus = "ViGEmBus: Ready";
+    [ObservableProperty] private bool _isViGEmAvailable = false;
 
     // Controller Status & Device Info
     [ObservableProperty] private string _controllerName = "Xbox Wireless Controller";
@@ -69,6 +81,24 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private bool _isButtonPressed_Start;
     [ObservableProperty] private bool _isButtonPressed_Back;
     [ObservableProperty] private bool _isButtonPressed_Guide;
+    [ObservableProperty] private bool _isButtonPressed_DPadUp;
+    [ObservableProperty] private bool _isButtonPressed_DPadDown;
+    [ObservableProperty] private bool _isButtonPressed_DPadLeft;
+    [ObservableProperty] private bool _isButtonPressed_DPadRight;
+
+    // Visual Joystick Offsets on Gamepad Controller Model [-14px, +14px]
+    [ObservableProperty] private double _leftStickVisualOffsetX = 0;
+    [ObservableProperty] private double _leftStickVisualOffsetY = 0;
+    [ObservableProperty] private double _rightStickVisualOffsetX = 0;
+    [ObservableProperty] private double _rightStickVisualOffsetY = 0;
+
+    // Real-time Trigger Percentages [0, 100]
+    [ObservableProperty] private int _leftTriggerPercent = 0;
+    [ObservableProperty] private int _rightTriggerPercent = 0;
+
+    // Real-time Input Monitor Status
+    [ObservableProperty] private string _activePressedButtonsSummary = "Ready / Idle";
+    [ObservableProperty] private bool _hasActiveInputs = false;
 
     // Remapping / "Listening..." State (Default is FALSE: only appears when user initiates mapping)
     [ObservableProperty] private bool _isListeningForBinding = false;
@@ -141,9 +171,21 @@ public partial class MainWindowViewModel : ViewModelBase
         LocalIpAddress = QrCodeGenerator.GetLocalIpAddress();
         ServerPort = _engine.UdpServer.Port;
 
+        IsViGEmAvailable = _engine.VirtualXbox.IsViGEmAvailable;
+        UpdateModeProperties(_engine.OperatingMode);
+
         InitializeProfiles();
         HookEngineEvents();
         UpdateControllerList();
+    }
+
+    private void UpdateModeProperties(BridgeOperatingMode mode)
+    {
+        IsXboxEmulationMode = (mode == BridgeOperatingMode.XboxEmulation);
+        OperatingModeName = IsXboxEmulationMode 
+            ? "🎮 Xbox 360 Emulation (PC Direct)" 
+            : "📡 Wi-Fi UDP Bridge (Mobile)";
+        VirtualControllerStatus = _engine.VirtualXbox.StatusDescription;
     }
 
     private void InitializeProfiles()
@@ -232,12 +274,21 @@ public partial class MainWindowViewModel : ViewModelBase
                 RightStickDotLeft = 65 + (RightStickX * 45) - 6;
                 RightStickDotTop = 65 + (RightStickY * 45) - 6;
 
+                // Visual stick displacements on the controller gamepad model
+                LeftStickVisualOffsetX = Math.Clamp(LeftStickX * 12.0, -12.0, 12.0);
+                LeftStickVisualOffsetY = Math.Clamp(LeftStickY * 12.0, -12.0, 12.0);
+                RightStickVisualOffsetX = Math.Clamp(RightStickX * 12.0, -12.0, 12.0);
+                RightStickVisualOffsetY = Math.Clamp(RightStickY * 12.0, -12.0, 12.0);
+
                 LeftTrigger = state.LeftTrigger;
                 RightTrigger = state.RightTrigger;
+                LeftTriggerPercent = (int)Math.Clamp(Math.Round(LeftTrigger * 100f), 0, 100);
+                RightTriggerPercent = (int)Math.Clamp(Math.Round(RightTrigger * 100f), 0, 100);
+
                 DPadX = state.DPadX;
                 DPadY = state.DPadY;
 
-                // Button Glows
+                // Button Glows & Pressed States
                 IsButtonPressed_A = state.GetButtonState(ControllerButton.A) == ButtonState.Pressed;
                 IsButtonPressed_B = state.GetButtonState(ControllerButton.B) == ButtonState.Pressed;
                 IsButtonPressed_X = state.GetButtonState(ControllerButton.X) == ButtonState.Pressed;
@@ -252,10 +303,48 @@ public partial class MainWindowViewModel : ViewModelBase
                 IsButtonPressed_Back = state.GetButtonState(ControllerButton.Back) == ButtonState.Pressed;
                 IsButtonPressed_Guide = state.GetButtonState(ControllerButton.Guide) == ButtonState.Pressed;
 
+                IsButtonPressed_DPadUp = state.DPadY > 0 || state.GetButtonState(ControllerButton.DPadUp) == ButtonState.Pressed;
+                IsButtonPressed_DPadDown = state.DPadY < 0 || state.GetButtonState(ControllerButton.DPadDown) == ButtonState.Pressed;
+                IsButtonPressed_DPadLeft = state.DPadX < 0 || state.GetButtonState(ControllerButton.DPadLeft) == ButtonState.Pressed;
+                IsButtonPressed_DPadRight = state.DPadX > 0 || state.GetButtonState(ControllerButton.DPadRight) == ButtonState.Pressed;
+
+                // Live Input Monitor Summary
+                var activeList = new List<string>();
+                if (IsButtonPressed_A) activeList.Add("A");
+                if (IsButtonPressed_B) activeList.Add("B");
+                if (IsButtonPressed_X) activeList.Add("X");
+                if (IsButtonPressed_Y) activeList.Add("Y");
+                if (IsButtonPressed_LB) activeList.Add("LB");
+                if (IsButtonPressed_RB) activeList.Add("RB");
+                if (LeftTriggerPercent > 5) activeList.Add($"LT: {LeftTriggerPercent}%");
+                if (RightTriggerPercent > 5) activeList.Add($"RT: {RightTriggerPercent}%");
+                if (IsButtonPressed_DPadUp) activeList.Add("D-Pad ▲");
+                if (IsButtonPressed_DPadDown) activeList.Add("D-Pad ▼");
+                if (IsButtonPressed_DPadLeft) activeList.Add("D-Pad ◀");
+                if (IsButtonPressed_DPadRight) activeList.Add("D-Pad ▶");
+                if (IsButtonPressed_LS) activeList.Add("LS Click");
+                if (IsButtonPressed_RS) activeList.Add("RS Click");
+                if (IsButtonPressed_Start) activeList.Add("Start");
+                if (IsButtonPressed_Back) activeList.Add("Back");
+                if (IsButtonPressed_Guide) activeList.Add("Guide");
+                if (Math.Abs(LeftStickX) > 0.2f || Math.Abs(LeftStickY) > 0.2f) activeList.Add($"LS {LeftStickPositionText}");
+                if (Math.Abs(RightStickX) > 0.2f || Math.Abs(RightStickY) > 0.2f) activeList.Add($"RS {RightStickPositionText}");
+
+                HasActiveInputs = activeList.Count > 0;
+                ActivePressedButtonsSummary = activeList.Count > 0 ? string.Join(" • ", activeList) : "Ready / Idle";
+
                 PacketsPerSecond = _engine.Metrics.PacketsPerSecond > 0 ? _engine.Metrics.PacketsPerSecond : 120.0;
                 TotalPacketsSent = _engine.Metrics.TotalPacketsSent;
                 PacketLossPercent = _engine.Metrics.PacketLossPercent;
                 LatencyMs = 2.1;
+            });
+        };
+
+        _engine.OperatingModeChanged += (s, mode) =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                UpdateModeProperties(mode);
             });
         };
     }
@@ -512,6 +601,46 @@ public partial class MainWindowViewModel : ViewModelBase
         IsSimulationMode = !IsSimulationMode;
         await _engine.BackendManager.SetSimulationModeAsync(IsSimulationMode);
         UpdateControllerList();
+    }
+
+    [RelayCommand]
+    public async Task ToggleOperatingMode()
+    {
+        var newMode = IsXboxEmulationMode ? BridgeOperatingMode.NetworkBridge : BridgeOperatingMode.XboxEmulation;
+        await _engine.SetOperatingModeAsync(newMode);
+        UpdateModeProperties(newMode);
+    }
+
+    [RelayCommand]
+    public async Task SetOperatingMode(string modeName)
+    {
+        var targetMode = modeName.Equals("Xbox", StringComparison.OrdinalIgnoreCase) 
+            ? BridgeOperatingMode.XboxEmulation 
+            : BridgeOperatingMode.NetworkBridge;
+        await _engine.SetOperatingModeAsync(targetMode);
+        UpdateModeProperties(targetMode);
+    }
+
+    [RelayCommand]
+    public void SelectTab(string tabName)
+    {
+        SelectedTab = tabName;
+        IsControllerTabSelected = tabName.Equals("Controller", StringComparison.OrdinalIgnoreCase);
+        IsGuideTabSelected = tabName.Equals("Guide", StringComparison.OrdinalIgnoreCase);
+        IsMappingTabSelected = tabName.Equals("Mapping", StringComparison.OrdinalIgnoreCase);
+        IsProfilesTabSelected = tabName.Equals("Profiles", StringComparison.OrdinalIgnoreCase);
+        IsSettingsTabSelected = tabName.Equals("Settings", StringComparison.OrdinalIgnoreCase);
+
+        if (IsMappingTabSelected)
+        {
+            StartFullMappingWizard();
+        }
+    }
+
+    [RelayCommand]
+    public void SelectGuideSection(string section)
+    {
+        GuideActiveSection = section;
     }
 }
 
